@@ -2,11 +2,34 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.axorion.chessboard</groupId>
-  <artifactId>chessboard</artifactId>
+  <artifactId>chesslr</artifactId>
   <packaging>jar</packaging>
-  <version>1.0-SNAPSHOT</version>
-  <name>chessboard</name>
-  <url>http://maven.apache.org</url>
+  <version>A.1</version>
+  <name>chesslr</name>
+  <url>https://8BitCoder.com</url>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/java/img</directory>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>com.axorion.chessboard.ChessLR</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

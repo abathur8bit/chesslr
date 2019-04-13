@@ -1,0 +1,55 @@
+JFDML JFormDesigner: "6.0.6.2.195" Java: "1.8.0_152-release" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+			name: "this"
+			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentMoved", "windowMoved", true ) )
+			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentResized", "windowResized", true ) )
+			menuBar: new FormContainer( "javax.swing.JMenuBar", new FormLayoutManager( class javax.swing.JMenuBar ) ) {
+				name: "menuBar1"
+				add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
+					name: "fileMenu"
+					"text": "File"
+					add( new FormComponent( "javax.swing.JMenuItem" ) {
+						name: "newMenuItem"
+						"text": "New"
+					} )
+					add( new FormComponent( "javax.swing.JMenuItem" ) {
+						name: "openMenuItem"
+						"text": "Open..."
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "openMenuItemActionPerformed", true ) )
+					} )
+					add( new FormComponent( "javax.swing.JMenuItem" ) {
+						name: "optionsMenuItem"
+						"text": "Optons..."
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "optionsMenuItemActionPerformed", true ) )
+					} )
+					add( new FormComponent( "javax.swing.JMenuItem" ) {
+						name: "exitMenuItem"
+						"text": "Exit"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "exitMenuItemActionPerformed", true ) )
+					} )
+				} )
+				add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
+					name: "helpMenu"
+					"text": "Help"
+					add( new FormComponent( "javax.swing.JMenuItem" ) {
+						name: "helpMenuItem"
+						"text": "ChessLR Help"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "helpMenuItemActionPerformed", true ) )
+					} )
+					add( new FormComponent( "javax.swing.JMenuItem" ) {
+						name: "aboutMenuItem"
+						"text": "About..."
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "aboutMenuItemActionPerformed", true ) )
+					} )
+				} )
+			}
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 0 )
+			"size": new java.awt.Dimension( 400, 300 )
+		} )
+	}
+}
