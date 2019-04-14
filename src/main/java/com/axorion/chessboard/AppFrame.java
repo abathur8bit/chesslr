@@ -23,6 +23,9 @@ import java.awt.event.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.CropImageFilter;
+import java.awt.image.FilteredImageSource;
+import java.awt.image.ImageProducer;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -33,7 +36,13 @@ import javax.swing.*;
  * @author Lee Patterson
  */
 public class AppFrame extends JFrame implements InvocationHandler {
+    String whitePieceLetters = "PNBRQK";
+    String blackPieceLetters = "pnbrqk";
     BoardPanel board;
+    int[] gameBoard = new int[64];
+    int gamePieceSelected;
+    int gamePieceCaptured;
+    SimBoard simBoard;
     JFileChooser fileChooser;   //used by windows
     FileDialog fileDialog;      //used by mac
     boolean isMac = false;
@@ -103,11 +112,58 @@ public class AppFrame extends JFrame implements InvocationHandler {
         }
 
         board = new BoardPanel(this);
+        board.setSize(720,720);
         getContentPane().add(board,BorderLayout.CENTER);
+        pack();
 
-        SimBoard simBoard = new SimBoard(this);
+        simBoard = new SimBoard(this);
         simBoard.setLocation(getX()+getWidth(),getY());
+
+        resetBoard();
+
         simBoard.setVisible(true);
+    }
+
+    public void pieceSelected(int x,int y) {
+        final int idx= y*8+x;
+        if(gamePieceSelected != 0) {
+            System.out.println("piece ["+(char)gameBoard[idx]+"] removed during capture");
+            gamePieceCaptured = gameBoard[idx];
+            gameBoard[idx] = 0;
+        } else {
+            char c = (char)gameBoard[idx];
+            gamePieceSelected = gameBoard[idx];
+            gameBoard[idx] = 0;
+            System.out.println("piece ["+c+"] at ["+x+","+y+"] picked up");
+        }
+    }
+
+    public void pieceDropped(int x,int y) {
+        gameBoard[y*8+x] = gamePieceSelected;
+        System.out.println("piece ["+((char)gamePieceSelected)+"] at ["+x+","+y+"] dropped "+(gamePieceCaptured!=0 ? "completing capture":""));
+        gamePieceSelected = 0;
+        gamePieceCaptured = 0;
+    }
+
+    public void resetBoard() {
+        String boardLetters =
+                "rnbqkbnr"+
+                "pppppppp"+
+                "        "+
+                "        "+
+                "        "+
+                "        "+
+                "PPPPPPPP"+
+                "RNBQKBNR";
+
+        simBoard.boardInterface.reset();
+        for(int i=0; i<64; ++i) {
+            gameBoard[i] = boardLetters.charAt(i) == ' ' ? 0:boardLetters.charAt(i);
+            if(gameBoard[i]>0) {
+                simBoard.boardInterface.setOccupied(i,true);
+            }
+        }
+        board.repaint();
     }
 
     /**
@@ -198,12 +254,46 @@ public class AppFrame extends JFrame implements InvocationHandler {
         return bi;
     }
 
+    public Image[] loadImageStrip(String filename,int numImages,int cellWidth,int cellHeight,int cellBorder) {
+        Image[] images = new Image[numImages];
+        Image img = loadImage(filename);
+        System.out.println("Image w="+img.getWidth(null)+" h="+img.getHeight(null));
+        int numCols = img.getWidth(null) / cellWidth;
+        ImageProducer sourceProducer = img.getSource();
+        for(int i=0; i<numImages; i++) {
+            images[i] = //createPlaceholder(cellWidth,cellHeight,new Color(i%255,10,10));
+                    loadCell(
+                            sourceProducer,
+                            ((i%numCols)*cellWidth)+cellBorder,
+                            ((i/numCols)*cellHeight)+cellBorder,
+                            cellWidth-cellBorder,
+                            cellHeight-cellBorder);
+            mediaTracker.addImage(images[i],0);
+        }
+        try {
+            mediaTracker.waitForAll();
+        } catch(InterruptedException e) {
+            //ignore
+        }
+        return images;
+    }
+
+    public Image loadCell(ImageProducer ip,int x,int y,int w,int h) {
+        return createImage(new FilteredImageSource(ip,new CropImageFilter(x,y,w,h)));
+    }
+
     private void windowMoved(ComponentEvent e) {
         getPrefs().savePrefs();
     }
 
     private void windowResized(ComponentEvent e) {
         getPrefs().savePrefs();
+    }
+
+    private void newMenuItemActionPerformed(ActionEvent e) {
+        resetBoard();
+        simBoard.boardInterface.reset();
+        simBoard.repaint();
     }
 
 
@@ -222,6 +312,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
         aboutMenuItem = new JMenuItem();
 
         //======== this ========
+        setResizable(false);
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentMoved(ComponentEvent e) {
@@ -244,6 +335,11 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
                 //---- newMenuItem ----
                 newMenuItem.setText("New");
+                newMenuItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        newMenuItemActionPerformed(e);
+                    }
+                });
                 fileMenu.add(newMenuItem);
 
                 //---- openMenuItem ----

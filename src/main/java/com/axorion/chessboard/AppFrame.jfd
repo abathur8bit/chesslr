@@ -5,6 +5,7 @@ new FormModel {
 	root: new FormRoot {
 		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 			name: "this"
+			"resizable": false
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentMoved", "windowMoved", true ) )
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentResized", "windowResized", true ) )
 			menuBar: new FormContainer( "javax.swing.JMenuBar", new FormLayoutManager( class javax.swing.JMenuBar ) ) {
@@ -15,6 +16,7 @@ new FormModel {
 					add( new FormComponent( "javax.swing.JMenuItem" ) {
 						name: "newMenuItem"
 						"text": "New"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "newMenuItemActionPerformed", true ) )
 					} )
 					add( new FormComponent( "javax.swing.JMenuItem" ) {
 						name: "openMenuItem"

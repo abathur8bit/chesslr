@@ -5,6 +5,7 @@
 package com.axorion.chessboard;
 
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 
 /**
@@ -13,14 +14,37 @@ import javax.swing.*;
 public class SimBoard extends JDialog {
     AppFrame parent;
     SimBoardPanel boardPanel;
+    SimBoardInterface boardInterface = new SimBoardInterface();
+
     public SimBoard(AppFrame owner) {
         super(owner);
         this.parent = owner;
         initComponents();
 
-        boardPanel = new SimBoardPanel();
-        setSize(new Dimension(320,320));
+        boardPanel = new SimBoardPanel(boardInterface);
+        setSize(new Dimension(400,400));
         getContentPane().add(boardPanel,BorderLayout.CENTER);
+
+        boardInterface.reset();
+    }
+
+    private void mouseClicked(MouseEvent e) {
+        int mx = e.getX()-getInsets().left;
+        int my = e.getY()-getInsets().top;
+        int sx = mx / (boardPanel.getWidth()/8);
+        int sy = my / (boardPanel.getHeight()/8);
+
+        System.out.println("clicked on square ["+sx+","+sy+"] clicked ["+mx+","+my+"]");
+
+
+        if(boardInterface.isOccupied(sx,sy)) {
+            parent.pieceSelected(sx,sy);
+        } else {
+            parent.pieceDropped(sx,sy);
+        }
+        boardInterface.setOccupied(sx,sy,!boardInterface.isOccupied(sx,sy));
+        boardPanel.repaint();
+        parent.repaint();
     }
 
     private void initComponents() {
@@ -29,6 +53,12 @@ public class SimBoard extends JDialog {
 
         //======== this ========
         setTitle("Sim Board");
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SimBoard.this.mouseClicked(e);
+            }
+        });
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
         pack();
