@@ -36,17 +36,16 @@ public class BoardPanel extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
-        renderBoard(g2,40,40);
+        renderBoard(g2,40,40,80);
         drawPieces(g2);
     }
 
-    public void renderBoard(Graphics2D g2,int xoffset,int yoffset) {
+    public void renderBoard(Graphics2D g2,int xoffset,int yoffset,int size) {
         int shadeWhite = 200;
         int shadeBlack = 100;
         Color whiteColor = new Color(shadeWhite,shadeWhite,shadeWhite);
         Color blackColor = new Color(shadeBlack,shadeBlack,shadeBlack);
         Color currentColor = whiteColor;
-        int size=80;
         for(int y=0; y<8; y++) {
             if(y%2 == 0) {
                 currentColor = whiteColor;
