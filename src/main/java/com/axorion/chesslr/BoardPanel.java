@@ -25,12 +25,17 @@ public class BoardPanel extends JPanel {
     AppFrame parent;
     Image[] blackPieceImages;
     Image[] whitePieceImages;
+    Image[] letters;
 
     public BoardPanel(AppFrame parent) {
         this.parent = parent;
         Image pieceStrip = parent.loadImage("alpha_black.png");
+
         blackPieceImages = parent.loadImageStrip("alpha_black.png",6,pieceStrip.getWidth(null)/6,pieceStrip.getHeight(null),2);
         whitePieceImages = parent.loadImageStrip("alpha_white.png",6,pieceStrip.getWidth(null)/6,pieceStrip.getHeight(null),2);
+
+        pieceStrip = parent.loadImage("alpha_black.png");
+        letters = parent.loadImageStrip("letters.png",16,172/16,12,0);
     }
 
     @Override
@@ -63,10 +68,29 @@ public class BoardPanel extends JPanel {
                 }
             }
         }
+        drawBoardOutline(g2,blackColor,xoffset,yoffset,size);
+        drawBoardLetters(g2,xoffset,yoffset,size);
+    }
+
+    public void drawBoardOutline(Graphics2D g2,Color blackColor,int xoffset,int yoffset,int size) {
         g2.setColor(blackColor);
         g2.drawRect(xoffset,yoffset,size*8,size*8);
         g2.drawRect(xoffset+1,yoffset+1,size*8-2,size*8-2);
         g2.drawRect(xoffset+2,yoffset+2,size*8-4,size*8-4);
+    }
+
+    public void drawBoardLetters(Graphics2D g2,int xoffset,int yoffset,int size) {
+        int x=0,y=0;
+        int width = letters[0].getWidth(null);
+        int height = letters[0].getHeight(null);
+//        g2.drawImage(letters[0],xoffset,yoffset,null);
+        for(y=0; y<8; y++) {
+            g2.drawImage(letters[7-y],xoffset+x*size-width-5,yoffset-5+y*size+size/2+height/2,null);
+        }
+        y = yoffset+size*8;
+        for(x=0; x<8; x++) {
+            g2.drawImage(letters[8+x],xoffset-5+x*size+size/2+width/2,y,null);
+        }
     }
 
     public void drawPieces(Graphics2D g2) {
