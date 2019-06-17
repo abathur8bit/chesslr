@@ -23,13 +23,11 @@ import java.awt.*;
 
 public class BoardPanel extends JPanel {
     AppFrame parent;
-    Image boardImage;
     Image[] blackPieceImages;
     Image[] whitePieceImages;
 
     public BoardPanel(AppFrame parent) {
         this.parent = parent;
-        boardImage = parent.loadImage("board4.png");
         Image pieceStrip = parent.loadImage("alpha_black.png");
         blackPieceImages = parent.loadImageStrip("alpha_black.png",6,pieceStrip.getWidth(null)/6,pieceStrip.getHeight(null),2);
         whitePieceImages = parent.loadImageStrip("alpha_white.png",6,pieceStrip.getWidth(null)/6,pieceStrip.getHeight(null),2);
@@ -38,8 +36,38 @@ public class BoardPanel extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
-        g2.drawImage(boardImage,0,0,null);
+        renderBoard(g2,40,40);
         drawPieces(g2);
+    }
+
+    public void renderBoard(Graphics2D g2,int xoffset,int yoffset) {
+        int shadeWhite = 200;
+        int shadeBlack = 100;
+        Color whiteColor = new Color(shadeWhite,shadeWhite,shadeWhite);
+        Color blackColor = new Color(shadeBlack,shadeBlack,shadeBlack);
+        Color currentColor = whiteColor;
+        int size=80;
+        for(int y=0; y<8; y++) {
+            if(y%2 == 0) {
+                currentColor = whiteColor;
+            } else {
+                currentColor = blackColor;
+            }
+
+            for(int x=0; x<8; x++) {
+                g2.setColor(currentColor);
+                g2.fillRect(xoffset + x*size,yoffset + y*size,size,size);
+                if(currentColor == whiteColor) {
+                    currentColor = blackColor;
+                } else {
+                    currentColor = whiteColor;
+                }
+            }
+        }
+        g2.setColor(blackColor);
+        g2.drawRect(xoffset,yoffset,size*8,size*8);
+        g2.drawRect(xoffset+1,yoffset+1,size*8-2,size*8-2);
+        g2.drawRect(xoffset+2,yoffset+2,size*8-4,size*8-4);
     }
 
     public void drawPieces(Graphics2D g2) {
