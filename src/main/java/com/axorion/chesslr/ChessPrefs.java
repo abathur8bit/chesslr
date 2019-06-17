@@ -16,7 +16,7 @@
  * limitations under the License.
  * ******************************************************************************/
 
-package com.axorion.chessboard;
+package com.axorion.chesslr;
 
 import java.awt.*;
 import java.io.*;

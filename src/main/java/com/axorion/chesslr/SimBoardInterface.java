@@ -1,4 +1,4 @@
-package com.axorion.chessboard;
+package com.axorion.chesslr;
 
 /** Simulated board interface. */
 public class SimBoardInterface implements BoardInterface {

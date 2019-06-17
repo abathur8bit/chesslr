@@ -16,7 +16,7 @@
  * limitations under the License.
  * ******************************************************************************/
 
-package com.axorion.chessboard;
+package com.axorion.chesslr;
 
 import javax.swing.filechooser.FileFilter;
 import java.io.File;

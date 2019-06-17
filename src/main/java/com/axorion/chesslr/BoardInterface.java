@@ -16,7 +16,7 @@
  * limitations under the License.
  * ******************************************************************************/
 
-package com.axorion.chessboard;
+package com.axorion.chesslr;
 
 /** Inteface to the hardware. You check the current signal of a board location. */
 public interface BoardInterface {

@@ -2,7 +2,7 @@
  * Created by JFormDesigner on Fri Apr 12 22:17:42 EDT 2019
  */
 
-package com.axorion.chessboard;
+package com.axorion.chesslr;
 
 import java.awt.*;
 import java.awt.event.*;

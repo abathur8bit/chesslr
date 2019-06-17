@@ -1,4 +1,4 @@
-package com.axorion.chessboard;
+package com.axorion.chesslr;
 
 import javax.swing.*;
 import java.awt.*;

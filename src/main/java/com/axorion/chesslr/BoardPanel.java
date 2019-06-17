@@ -16,13 +16,10 @@
  * limitations under the License.
  * ******************************************************************************/
 
-package com.axorion.chessboard;
-
-import com.sun.corba.se.impl.orbutil.graph.Graph;
+package com.axorion.chesslr;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
 
 public class BoardPanel extends JPanel {
     AppFrame parent;

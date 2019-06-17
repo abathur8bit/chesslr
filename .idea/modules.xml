@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/chessboard.iml" filepath="$PROJECT_DIR$/chessboard.iml" />
+      <module fileurl="file://$PROJECT_DIR$/chesslr.iml" filepath="$PROJECT_DIR$/chesslr.iml" />
     </modules>
   </component>
 </project>
