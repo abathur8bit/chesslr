@@ -16,6 +16,8 @@
  * limitations under the License.
  * ******************************************************************************/
 
+package examples;
+
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CDevice;
 import com.pi4j.io.i2c.I2CFactory;
@@ -23,8 +25,8 @@ import com.pi4j.io.i2c.I2CFactory;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class LEDDisplay {
-    static final int BACKPACK_ADDR = 0x70;
+public class I2CTest {
+    static final int BACKPACK_ADDR = 0x20;
     static final int HT16K33_BLINK_CMD = 0x80;
     static final int HT16K33_BLINK_DISPLAYON = 0x01;
     static final int HT16K33_BLINK_OFF = 0;
@@ -36,8 +38,22 @@ public class LEDDisplay {
 
     static final int SEVENSEG_DIGITS = 5;
 
+    public static void usage() {
+        System.out.println("examples.I2CTest (www.8BitCoder.com)");
+        System.out.println("Usage: examples.I2CTest device_address_hex");
+        System.out.println("Usage: examples.I2CTest 70");
+        System.out.println("Address is in hex without the 0x in front of it");
+        System.exit(0);
+    }
 
-    public static void main(String[] args) throws Exception {
+    static public void main(String[] args) throws Exception {
+        String saddr = "0x70";
+        if(args.length>0) {
+            saddr = args[0];
+        }
+        if(args.length < 1) {
+            usage();
+        }
         System.out.println("I2C with 7 segment backpack test");
 
         // fetch all available busses
@@ -60,21 +76,23 @@ public class LEDDisplay {
 
             I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
             System.out.println("Getting device");
-            I2CDevice device = bus.getDevice(BACKPACK_ADDR);
+            int addr = Integer.parseInt(saddr,16);
+            System.out.format("Checking address 0x%02X\n",addr);
+            I2CDevice device = bus.getDevice(addr);
 
-            System.out.println("Writting byte");
-            device.write((byte)0); // start at address $00
-
-            for (int i=0; i<8; i++) {
-                device.write((byte)0xFF);
-                device.write((byte)((byte)0xAA >> (byte)8));
-            }
+            System.out.println("Got the device");
+//            System.out.println("Writting byte");
+//            device.write((byte)0); // start at address $00
+//
+//            for (int i=0; i<8; i++) {
+//                device.write((byte)0xFF);
+//                device.write((byte)((byte)0xAA >> (byte)8));
+//            }
 
             Thread.sleep(10000);
         } catch (IOException exception) {
             System.out.println("I/O error during fetch of I2C busses occurred "+exception);
             exception.printStackTrace();
         }
-
     }
 }
