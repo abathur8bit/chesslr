@@ -28,6 +28,7 @@ import com.pi4j.io.i2c.I2CFactory;
 
 import java.io.IOException;
 
+/** Example for outputting to dual MCP23017 using Pi4J. Example modified from Pi4J MCP23017GpioExample. */
 public class MCPExample {
     public static void main(String[] args) throws InterruptedException, IOException, I2CFactory.UnsupportedBusNumberException {
         int address = 0x20;
@@ -79,6 +80,6 @@ public class MCPExample {
         // (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
         gpio.shutdown();
 
-        System.out.println("Exiting examples.MCP23017GpioExample");
+        System.out.println("Exiting");
     }
 }
