@@ -24,7 +24,6 @@ import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.Pin;
 import com.pi4j.io.gpio.PinState;
-import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 
 import java.io.IOException;
@@ -53,6 +52,69 @@ import java.io.IOException;
  *           +-----------+
  */
 public class ChessLEDController {
+    class FadeThread implements Runnable {
+        boolean running = true;
+        boolean onState = false;
+        GpioPinDigitalOutput led;
+        long timer=0;
+        static final long DELAY=10;
+        int timeOn = 500000;
+        int timeOff=500000;
+        public FadeThread(GpioPinDigitalOutput led) {
+            this.led = led;
+            timer = System.currentTimeMillis()+DELAY;
+        }
+        public void run() {
+            try {
+                milli();
+            } catch(InterruptedException e) {
+                //do nothing
+            }
+        }
+
+        public void milli() throws InterruptedException {
+            long onTime=0;
+            long dir=1;
+            long delay=50;
+            long timer=System.currentTimeMillis()+delay;
+            while(running) {
+                cycle(onTime);
+                if(System.currentTimeMillis() > timer) {
+                    timer = System.currentTimeMillis()+delay;
+                    onTime+=dir;
+                    if(onTime==20 || onTime==0) {
+                        dir *= -1;
+                    }
+                }
+            }
+        }
+        public void cycle(long onTime) throws InterruptedException {
+            gpio.setState(true,out);
+//            led.setState(PinState.HIGH);
+            Thread.sleep(onTime);
+//            led.setState(PinState.LOW);
+            gpio.setState(false,out);
+            Thread.sleep(20-onTime);
+        }
+        public void micro() throws InterruptedException {
+            while(running) {
+//                PinState state = onState ? PinState.HIGH:PinState.LOW;
+                //turn on for 10ms
+                timer = System.currentTimeMillis()+DELAY;
+                led.setState(PinState.HIGH);
+//                    Thread.sleep(timeOn);
+                Thread.sleep(0,250000);
+                led.setState(PinState.LOW);
+//                    Thread.sleep(timeOff);
+                Thread.sleep(1,750000);
+            }
+
+        }
+    };
+
+
+    FadeThread fadeThread;
+
     static final int BANK_SIZE = 16;
     static final int BASE_ADDRESS = 0x20;
 
@@ -102,6 +164,25 @@ public class ChessLEDController {
         int bank = calcBank(led);
         int bankLed = calcBankLed(bank,led);
         set(bank,bankLed,on);
+    }
+
+    public void blink(int led) {
+        int bank = calcBank(led);
+        int bankLed = calcBankLed(bank,led);
+        out[led].blink(200);
+    }
+    public void blink(int led,long duration) {
+        int bank = calcBank(led);
+        int bankLed = calcBankLed(bank,led);
+        out[led].blink(200,duration);
+    }
+
+
+    public void fade(int led) {
+        int bank = calcBank(led);
+        int bankLed = calcBankLed(bank,led);
+        fadeThread = new FadeThread(out[0]);
+        new Thread(fadeThread).start();
     }
 
     protected void set(int bank,int led,boolean on) {

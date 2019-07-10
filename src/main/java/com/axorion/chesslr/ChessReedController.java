@@ -21,7 +21,6 @@ package com.axorion.chesslr;
 import com.pi4j.gpio.extension.mcp.MCP23017GpioProvider;
 import com.pi4j.gpio.extension.mcp.MCP23017Pin;
 import com.pi4j.io.gpio.*;
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CFactory;
 
@@ -107,12 +106,6 @@ public class ChessReedController {
             pinInput[i] = gpio.provisionDigitalInputPin(provider,pins[i],pins[i].toString(),PinPullResistance.PULL_UP);
 
         }
-
-//        gpio.addListener(new GpioPinListenerDigital() {
-//            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-//                System.out.println("reedController GPIO PIN STATE CHANGE: " + event.getPin() + " = " + event.getState());
-//            }
-//        },pinInput);
     }
 
     public void addListener(GpioPinListenerDigital listener) {

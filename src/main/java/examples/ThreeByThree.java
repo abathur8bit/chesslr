@@ -20,15 +20,12 @@ package examples;
 
 import com.axorion.chesslr.ChessLEDController;
 import com.axorion.chesslr.ChessReedController;
-import com.pi4j.gpio.extension.mcp.MCP23017GpioProvider;
-import com.pi4j.gpio.extension.mcp.MCP23017Pin;
-import com.pi4j.io.gpio.*;
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
-import com.pi4j.io.i2c.I2CFactory;
-
-import java.io.IOException;
 
 public class ThreeByThree {
     final GpioController gpio = GpioFactory.getInstance();
@@ -38,7 +35,6 @@ public class ThreeByThree {
         ThreeByThree app = new ThreeByThree();
         app.startup();
         app.play();
-
     }
 
     public ThreeByThree() throws Exception {
@@ -55,25 +51,23 @@ public class ThreeByThree {
         });
     }
 
-    public void led(int led,boolean on) {
-        ledController.led(led,on);
-    }
-
     public void startup() {
         try {
             for(int i = 0; i < 9; ++i) {
                 ledController.led(i,true);
-                Thread.sleep(250);
+                Thread.sleep(100);
                 ledController.led(i,false);
-                Thread.sleep(250);
             }
 
             for(int i=0; i<9; ++i) {
                 ledController.led(i,reedController.isSet(i));
             }
+
         } catch(InterruptedException e) {
             //do nothing
         }
+//        ledController.led(1,true);
+//        ledController.blink(0,5000);
     }
 
     public void play() {
