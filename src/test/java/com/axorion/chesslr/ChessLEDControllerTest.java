@@ -18,6 +18,7 @@
 
 package com.axorion.chesslr;
 
+import com.axorion.chesslr.hardware.ChessLEDController;
 import junit.framework.TestCase;
 
 public class ChessLEDControllerTest extends TestCase {

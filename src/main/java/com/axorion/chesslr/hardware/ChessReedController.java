@@ -16,7 +16,7 @@
  * limitations under the License.
  * ******************************************************************************/
 
-package com.axorion.chesslr;
+package com.axorion.chesslr.hardware;
 
 import com.pi4j.gpio.extension.mcp.MCP23017GpioProvider;
 import com.pi4j.gpio.extension.mcp.MCP23017Pin;

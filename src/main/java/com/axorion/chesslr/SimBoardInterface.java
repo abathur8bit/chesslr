@@ -6,7 +6,7 @@ public class SimBoardInterface implements BoardInterface {
     protected boolean ledState[] = new boolean[NUM_SQUARES];
     protected boolean squareState[] = new boolean[NUM_SQUARES];
 
-    public boolean isOccupiec(int i) {
+    public boolean isOccupied(int i) {
         return squareState[i];
     }
 
