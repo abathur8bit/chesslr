@@ -41,7 +41,7 @@ public class ChessLR {
             } else {
                 setDefaultSize();
             }
-            instance.setVisible(true);
+            instance.startApp();
         } catch(Exception e) {
             handleError("Unable to start application",e);
         }

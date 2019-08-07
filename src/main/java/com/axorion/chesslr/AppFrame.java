@@ -117,10 +117,14 @@ public class AppFrame extends JFrame implements InvocationHandler {
         pack();
 
         simBoard = new SimBoard(this);
-        simBoard.setLocation(getX()+getWidth(),getY());
 
+
+    }
+
+    public void startApp() {
         resetBoard();
-
+        setVisible(true);
+        simBoard.setLocation(getX()+getWidth(),getY());
         simBoard.setVisible(true);
     }
 

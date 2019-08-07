@@ -69,7 +69,7 @@ public class BoardPanel extends JPanel {
             }
         }
         drawBoardOutline(g2,blackColor,xoffset,yoffset,size);
-        drawBoardLetters(g2,xoffset,yoffset,size);
+//        drawBoardLetters(g2,xoffset,yoffset,size);
     }
 
     public void drawBoardOutline(Graphics2D g2,Color blackColor,int xoffset,int yoffset,int size) {

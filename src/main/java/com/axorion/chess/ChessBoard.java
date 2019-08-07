@@ -146,6 +146,17 @@ public class ChessBoard
         return moves.toString();
     }
 
+    /** Return what piece is at the given location on the board. Top left is 0,0, bottom right is 7,7.
+     * See pieceAt(int);
+     *
+     * @param x Column of piece location.
+     * @param y Row of piece location
+     * @return Letter of the piece, or a space for an empty square.
+     */
+    public char pieceAt(int x,int y) {
+        return pieceAt(y*8+x);
+    }
+
     /**
      * Return what pieces is at the given index in the board. Top left is 0, bottom right is 63. Will return an integer
      * representing the ascii value (char) of the letter, or a space.
