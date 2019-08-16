@@ -48,7 +48,7 @@ public class ChessLR {
     }
 
     public static void setDefaultSize() {
-        instance.setSize(720,720);
+        instance.setSize(480,720);
         instance.setLocationRelativeTo(null);
     }
 

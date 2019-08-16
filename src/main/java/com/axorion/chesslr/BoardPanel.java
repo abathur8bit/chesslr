@@ -27,6 +27,11 @@ public class BoardPanel extends JPanel {
     Image[] whitePieceImages;
     Image[] letters;
 
+    int xoffset=0;
+    int yoffset=0;
+    int squareWidth=60;
+    int squareHeight=60;
+
     public BoardPanel(AppFrame parent) {
         this.parent = parent;
         Image pieceStrip = parent.loadImage("alpha_black.png");
@@ -41,7 +46,8 @@ public class BoardPanel extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
-        renderBoard(g2,40,40,80);
+        renderBoard(g2,xoffset,yoffset,squareWidth);
+//        renderBoard(g2,40,40,80);
         drawPieces(g2);
     }
 
@@ -97,18 +103,17 @@ public class BoardPanel extends JPanel {
         if(parent.simBoard.boardInterface.isOccupied(0,0)) {
             for(int y=0; y<8; ++y) {
                 for(int x=0; x<8; ++x) {
-                    drawPiece(parent.gameBoard[y*8+x],x,y,g2);
+                    drawPiece(parent.chessBoard.pieceAt(y*8+x),x,y,g2);
+//                    drawPiece(parent.gameBoard[y*8+x],x,y,g2);
                 }
             }
         }
     }
 
     public void drawPiece(int piece,int x,int y,Graphics2D g2) {
-        int xoffset = 40,yoffset=40;
-        int width = 80,height = 80;
         Image pieceImage = findPieceImage(piece);
         if(pieceImage != null) {
-            g2.drawImage(pieceImage,x*width+xoffset+5,y*height+yoffset+5,width-10,height-10,null);
+            g2.drawImage(pieceImage,x*squareWidth+xoffset+5,y*squareHeight+yoffset+5,squareWidth-10,squareHeight-10,null);
         } else {
 //            g2.setColor(Color.RED);
 //            g2.drawRect(x*width+xoffset+5,y*height+yoffset+5,width-10,height-10);

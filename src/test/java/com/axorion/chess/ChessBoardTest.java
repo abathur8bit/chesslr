@@ -66,6 +66,10 @@ public class ChessBoardTest extends TestCase
         String expected = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"; //note that En passant target square not implemented
         System.out.println("toFen=["+board.toFen()+"]");
         assertEquals(expected,board.toFen());
+        assertTrue(board.canWhiteCastleKingSide());
+        assertTrue(board.canWhiteCastleQueenSide());
+        assertTrue(board.canBlackCastleKingSide());
+        assertTrue(board.canBlackCastleQueenSide());
     }
 
     public void testSetPosition() {
@@ -153,4 +157,52 @@ public class ChessBoardTest extends TestCase
     rnbqk2r/ppppbppp/5n2/4p3/4P3/3P1N2/PPP2PPP/RNBQKB1R w KQkq - 5 6
      */
 
+    public void testSetFenPosition() {
+        // 8/kp6/pn2r3/1p3Np1/3PB3/2r2P1P/P5P1/R5K1 w - - 0 33
+        String fen = "8/kp6/pn2r3/1p3Np1/3PB3/2r2P1P/P5P1/R5K1 w - - 0 33";
+        String boardLetters =
+                "        "+
+                "kp      "+
+                "pn  r   "+
+                " p   Np "+
+                "   PB   "+
+                "  r  P P"+
+                "P     P "+
+                "R     K ";
+        ChessBoard board = new ChessBoard();
+        board.setFenPosition(fen);
+        System.out.println("Expecting:");
+        System.out.println(boardLetters);
+        System.out.println("Got:");
+        System.out.println(board.toLetters());
+        assertEquals(boardLetters,board.toLetters());
+        assertFalse(board.canWhiteCastleKingSide());
+        assertFalse(board.canWhiteCastleQueenSide());
+        assertFalse(board.canBlackCastleKingSide());
+        assertFalse(board.canBlackCastleQueenSide());
+
+
+    }
+
+    public void testSetFenPositionCastling() {
+        ChessBoard board = new ChessBoard();
+        String fen = "8/kp6/pn2r3/1p3Np1/3PB3/2r2P1P/P5P1/R5K1 w - - 0 33";
+        board.setFenPosition(fen);
+        assertFalse(board.canWhiteCastleKingSide());
+        assertFalse(board.canWhiteCastleQueenSide());
+        assertFalse(board.canBlackCastleKingSide());
+        assertFalse(board.canBlackCastleQueenSide());
+
+        board.setFenPosition("8/kp6/pn2r3/1p3Np1/3PB3/2r2P1P/P5P1/R5K1 w K - 0 33");
+        assertTrue(board.canWhiteCastleKingSide());
+        assertFalse(board.canWhiteCastleQueenSide());
+        assertFalse(board.canBlackCastleKingSide());
+        assertFalse(board.canBlackCastleQueenSide());
+
+        board.setFenPosition("8/kp6/pn2r3/1p3Np1/3PB3/2r2P1P/P5P1/R5K1 w Kq - 0 33");
+        assertTrue(board.canWhiteCastleKingSide());
+        assertFalse(board.canWhiteCastleQueenSide());
+        assertFalse(board.canBlackCastleKingSide());
+        assertTrue(board.canBlackCastleQueenSide());
+    }
 }

@@ -18,30 +18,52 @@
 
 package com.axorion.chesslr;
 
+import com.axorion.chess.ChessBoard;
+import com.axorion.chesslr.hardware.ChessLEDController;
+import com.axorion.chesslr.hardware.ChessReedController;
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
+import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import com.pi4j.io.i2c.I2CBus;
+import com.pi4j.io.i2c.I2CFactory;
+import oled.Font;
+import oled.OLEDDisplay;
+
+import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.CropImageFilter;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageProducer;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
-import javax.swing.*;
 
 /**
  * @author Lee Patterson
  */
 public class AppFrame extends JFrame implements InvocationHandler {
+    final GpioController gpio = GpioFactory.getInstance();
+    ChessLEDController ledController;
+    ChessReedController reedController;
+    OLEDDisplay display;
+
     String whitePieceLetters = "PNBRQK";
     String blackPieceLetters = "pnbrqk";
     BoardPanel board;
-    int[] gameBoard = new int[64];
+    ChessBoard chessBoard = new ChessBoard();
     int gamePieceSelected;
     int gamePieceCaptured;
+    int selectedIndex = -1; //what board index was selected (piece was lifted from the square)
+    int capturedIndex = -1; //if you have already picked up a piece, this is the piece you are capturing
     SimBoard simBoard;
     JFileChooser fileChooser;   //used by windows
     FileDialog fileDialog;      //used by mac
@@ -63,7 +85,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
     };
     int colorIndex=0;
 
-    public AppFrame(String title) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException {
+    public AppFrame(String title) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
         prefs = new ChessPrefs(this);
         prefs.loadPrefs();
@@ -118,55 +140,248 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
         simBoard = new SimBoard(this);
 
-
+        initHardware();
     }
 
-    public void startApp() {
+    private void initHardware() throws IOException, I2CFactory.UnsupportedBusNumberException {
+        ledController = new ChessLEDController(gpio,I2CBus.BUS_1);
+        reedController = new ChessReedController(gpio,I2CBus.BUS_1);
+        reedController.addListener(new GpioPinListenerDigital() {
+            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                boolean state = event.getState() == PinState.HIGH ? false:true;
+                final int ledIndex = reedController.findPinIndex(event.getPin().getPin());
+
+//                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
+
+                if(state) {
+                    pieceDown(ledIndex);
+                } else {
+                    pieceUp(ledIndex);
+                }
+
+//                if(state) {
+//                    display.clear();
+//                    showBoard();
+//                    final int x=9;
+//                    textxy("B00:00:00",x,0);
+//                    textxy("W00:00:00",x,1);
+//                    textxy("led="+ledIndex,x,7);
+//                    updateDisplay();
+//                }
+
+            }
+        });
+        display = new OLEDDisplay(I2CBus.BUS_1,0x3D);
+
+    }
+    public void startApp() throws IOException {
         resetBoard();
+        startup();
         setVisible(true);
         simBoard.setLocation(getX()+getWidth(),getY());
-        simBoard.setVisible(true);
+//        simBoard.setVisible(true);
     }
 
-    public void pieceSelected(int x,int y) {
-        final int idx= y*8+x;
-        if(gamePieceSelected != 0) {
-            System.out.println("piece ["+(char)gameBoard[idx]+"] removed during capture");
-            gamePieceCaptured = gameBoard[idx];
-            gameBoard[idx] = 0;
-        } else {
-            char c = (char)gameBoard[idx];
-            gamePieceSelected = gameBoard[idx];
-            gameBoard[idx] = 0;
-            System.out.println("piece ["+c+"] at ["+x+","+y+"] picked up");
+    /**
+     * Piece was lifted off the board.
+     *
+     * @param index location piece was picked up from.
+     */
+    public void pieceUp(int index) {
+        int boardIndex = mapToBoard(index);
+        gamePieceSelected = boardIndex;
+        System.out.format("Piece at [%d] [%s] was selected\n",index,chessBoard.indexToBoard(boardIndex));
+        blink(1,100,index);
+        display.clear();
+        showBoard();
+        updateDisplay();
+    }
+
+    /**
+     * Piece was put back onto the board at the given index.
+     *
+     * @param index location piece was dropped.
+     */
+    public void pieceDown(int index) {
+        int boardIndex = mapToBoard(index);
+        String playersMove = chessBoard.indexToBoard(gamePieceSelected)+chessBoard.indexToBoard(boardIndex);
+        chessBoard.move(playersMove);
+        gamePieceSelected = -1;
+        System.out.format("Piece dropped at [%d] [%s] move=[%s]\n",index,chessBoard.indexToBoard(boardIndex),playersMove);
+//        showBoard();
+//        updateDisplay();
+        repaint();
+        board.repaint();
+        blink(2,100,index);
+
+    }
+
+    public void blink(int count, long delay, int ledIndex) {
+        try {
+            for(int i = 0; i < count; i++) {
+                ledController.led(ledIndex,true);
+                Thread.sleep(delay);
+                ledController.led(ledIndex,false);
+                Thread.sleep(delay);
+            }
+        } catch(InterruptedException e) {
+            ledController.led(ledIndex,false);
         }
     }
 
-    public void pieceDropped(int x,int y) {
-        gameBoard[y*8+x] = gamePieceSelected;
-        System.out.println("piece ["+((char)gamePieceSelected)+"] at ["+x+","+y+"] dropped "+(gamePieceCaptured!=0 ? "completing capture":""));
-        gamePieceSelected = 0;
-        gamePieceCaptured = 0;
+    public int mapToBoard(int index) {
+        int[] map = {56,57,58,48,49,50,40,41,42};
+        return map[index];
     }
+    public void showBoard() {
+        StringBuilder builder = new StringBuilder();
+        int y=0,x=0;
+        int index=0;
+        int w= oled.Font.FONT_5X8.getOuterWidth()+1;
+        int h=8;
+        int tx;
+        int ty;
 
-    public void resetBoard() {
-        String boardLetters =
-                "rnbqkbnr"+
-                "pppppppp"+
-                "        "+
-                "        "+
-                "        "+
-                "        "+
-                "PPPPPPPP"+
-                "RNBQKBNR";
-
-        simBoard.boardInterface.reset();
-        for(int i=0; i<64; ++i) {
-            gameBoard[i] = boardLetters.charAt(i) == ' ' ? 0:boardLetters.charAt(i);
-            if(gameBoard[i]>0) {
-                simBoard.boardInterface.setOccupied(i,true);
+        for(ty=0; ty<8; ty++) {
+            builder.delete(0,8);
+            for(tx=0; tx<8; tx++) {
+                x=tx*w;
+                y=ty*h;
+                if(gamePieceSelected == index) {
+                    display.clearRect(x,y,w,h,true);
+                    display.drawChar(chessBoard.pieceAt(index++),oled.Font.FONT_5X8,x,y,false);
+                } else {
+                    display.clearRect(x,y,w,h,false);
+                    display.drawChar(chessBoard.pieceAt(index++),oled.Font.FONT_5X8,x,y,true);
+                }
             }
         }
+    }
+
+    public void showBoardComponents() throws IOException {
+        display.clear();
+        showBoard();
+        final int x=9;
+        int y=0;
+        textxy("B00:00:00",x,y++);
+        textxy("W00:00:00",x,y++);
+        textxy("1 b3  d5",x,y++);
+        textxy("2 O-O-O",x,y++);
+        textxy("2.. O-O-O",x,y++);
+        textxy("3 Nf3 Nf6",x,y++);
+        textxy("4 g3  Bc5",x,y++);
+        textxy("5 Bg2 O-O",x,y++);
+        textxy("6 *",x,y++);
+    }
+
+    public void drawRect(OLEDDisplay display,int xpos,int ypos,int width,int height,boolean on) {
+        int y=ypos;
+        int x=xpos;
+        for(x=xpos; x<xpos+width-1; ++x) {
+            display.setPixel(x,y,on);
+        }
+        y=ypos+height-1;
+        for(x=xpos; x<xpos+width-1; ++x) {
+            display.setPixel(x,y,on);
+        }
+
+        x=xpos;
+        for(y=ypos; y<ypos+height-1; ++y) {
+            display.setPixel(x,y,on);
+        }
+        x=xpos+width-1;
+        for(y=ypos; y<ypos+height-1; ++y) {
+            display.setPixel(x,y,on);
+        }
+    }
+
+    public void textxy(String s,int tx,int ty) {
+        int w= oled.Font.FONT_5X8.getOuterWidth()+1;
+        int h=8;
+        int x=tx*w;
+        int y=ty*h;
+        for(int i=0; i<s.length(); i++) {
+            display.drawChar(s.charAt(i),Font.FONT_5X8,(tx+i)*w,ty*h,true);
+        }
+    }
+
+    public void updateDisplay() {
+        try {
+            display.update();
+        } catch(IOException ex) {
+            //do nothing
+        }
+    }
+
+    public void startup() throws IOException {
+        drawRect(display,0,0,display.getWidth(),display.getHeight(),true);
+        display.drawStringCentered("ChessLR",Font.FONT_5X8,display.getHeight()/2-4,true);
+        display.update();
+
+        try {
+            for(int i = 0; i < 9; ++i) {
+                ledController.led(i,true);
+                Thread.sleep(100);
+                ledController.led(i,false);
+            }
+
+//            for(int i=0; i<9; ++i) {
+//                ledController.led(i,reedController.isSet(i));
+//            }
+
+        } catch(InterruptedException e) {
+            //do nothing
+        }
+//        ledController.led(1,true);
+//        ledController.blink(0,5000);
+
+        display.clear();
+        showBoardComponents();
+        display.update();
+    }
+
+    /** Player has lifted a piece, or in other words, the sensor no longer sees a piece. */
+    public void pieceUp(int x,int y) {
+        final int idx = chessBoard.toIndex(x,y);
+        final int piece = chessBoard.pieceAt(idx);
+//        if(selectedIndex == -1) {
+//            capturedIndex = idx;
+//            System.out.println("piece ["+(char)chessBoard.pieceAt(idx)+"] removed during capture");
+//            gamePieceCaptured = gameBoard[idx];
+//            gameBoard[idx] = 0;
+//        } else {
+//            char c = (char)gameBoard[idx];
+//            gamePieceSelected = gameBoard[idx];
+//            gameBoard[idx] = 0;
+//            System.out.println("piece ["+c+"] at ["+x+","+y+"] picked up");
+//        }
+
+        selectedIndex = idx;
+
+//        if(gamePieceSelected != 0) {
+//            System.out.println("piece ["+(char)gameBoard[idx]+"] removed during capture");
+//            gamePieceCaptured = gameBoard[idx];
+//            gameBoard[idx] = 0;
+//        } else {
+//            char c = (char)gameBoard[idx];
+//            gamePieceSelected = gameBoard[idx];
+//            gameBoard[idx] = 0;
+//            System.out.println("piece ["+c+"] at ["+x+","+y+"] picked up");
+//        }
+    }
+
+    public void pieceDown(int x,int y) {
+        final int droppedIndex = chessBoard.toIndex(x,y);
+        String move = chessBoard.indexToBoard(selectedIndex)+chessBoard.indexToBoard(droppedIndex);
+        System.out.printf("Move [%s] piece [%c]\n",move,chessBoard.pieceAt(selectedIndex));
+        chessBoard.move(move);
+        selectedIndex = -1;
+        capturedIndex = -1;
+    }
+
+    private void resetBoard() {
+        simBoard.boardInterface.reset();
+        chessBoard.resetBoard();
         board.repaint();
     }
 
@@ -186,7 +401,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
         return null;
     }
 
-    public ChessPrefs getPrefs() {
+    private ChessPrefs getPrefs() {
         return prefs;
     }
 
@@ -197,7 +412,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
         }
     }
 
-    public AboutDialog getAboutDialog() {
+    private AboutDialog getAboutDialog() {
         if(aboutDialog == null) {
             aboutDialog = new AboutDialog(this);
         }
@@ -299,7 +514,6 @@ public class AppFrame extends JFrame implements InvocationHandler {
         simBoard.boardInterface.reset();
         simBoard.repaint();
     }
-
 
 
     private void initComponents() {

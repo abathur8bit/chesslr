@@ -4,9 +4,10 @@
 
 package com.axorion.chesslr;
 
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * @author Lee Patterson
@@ -34,13 +35,12 @@ public class SimBoard extends JDialog {
         int sx = mx / (boardPanel.getWidth()/8);
         int sy = my / (boardPanel.getHeight()/8);
 
-        System.out.println("clicked on square ["+sx+","+sy+"] clicked ["+mx+","+my+"]");
-
+        System.out.println("clicked on square ["+sx+","+sy+"] mouse ["+mx+","+my+"]");
 
         if(boardInterface.isOccupied(sx,sy)) {
-            parent.pieceSelected(sx,sy);
+            parent.pieceUp(sx,sy);
         } else {
-            parent.pieceDropped(sx,sy);
+            parent.pieceDown(sx,sy);
         }
         boardInterface.setOccupied(sx,sy,!boardInterface.isOccupied(sx,sy));
         boardPanel.repaint();

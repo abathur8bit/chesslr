@@ -59,9 +59,9 @@ public class BoardApp {
 //                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
 
                 if(state) {
-                    pieceDropped(ledIndex);
+                    pieceDown(ledIndex);
                 } else {
-                    pieceSelected(ledIndex);
+                    pieceUp(ledIndex);
                 }
 
 //                if(state) {
@@ -93,7 +93,12 @@ public class BoardApp {
         }
     }
 
-    public void pieceSelected(int index) {
+    /**
+     * Piece was lifted off the board.
+     *
+     * @param index location piece was picked up from.
+     */
+    public void pieceUp(int index) {
         int boardIndex = mapToBoard(index);
         gamePieceSelected = boardIndex;
         System.out.format("Piece at [%d] [%s] was selected\n",index,gameBoard.indexToBoard(boardIndex));
@@ -103,7 +108,12 @@ public class BoardApp {
         updateDisplay();
     }
 
-    public void pieceDropped(int index) {
+    /**
+     * Piece was put back onto the board at the given index.
+     *
+     * @param index location piece was dropped.
+     */
+    public void pieceDown(int index) {
         int boardIndex = mapToBoard(index);
         String playersMove = gameBoard.indexToBoard(gamePieceSelected)+gameBoard.indexToBoard(boardIndex);
         gameBoard.move(playersMove);

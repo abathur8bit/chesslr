@@ -1,5 +1,12 @@
 Contains any reference material used for the project. This includes anything related to ChessLR game or electronics of the board itself. 
 
+# Running remotely
+
+lee@titan: $ ssh pi@botfly
+pi@fireant:~ $ cd chesslr
+pi@fireant:~/chesslr $ export DISPLAY=:0
+pi@fireant:~/chesslr $ java -cp chesslr-A.1-jar-with-dependencies.jar com.axorion.chesslr.ChessLR
+
 # MCP23017
 
 Pin layout

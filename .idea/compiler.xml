@@ -10,7 +10,15 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="ChessBoard" target="1.5" />
       <module name="chesslr" target="1.5" />
+      <module name="pi-oled" target="1.5" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="chesslr" options="" />
+      <module name="pi-oled" options="-Xlint:all" />
+    </option>
   </component>
 </project>

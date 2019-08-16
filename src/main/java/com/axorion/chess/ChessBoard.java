@@ -18,6 +18,7 @@
 
 package com.axorion.chess;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,6 +70,143 @@ public class ChessBoard
         resetBoard();
     }
 
+    public boolean canWhiteCastleKingSide() {
+        return castleWhiteKingSide;
+    }
+
+    public boolean canWhiteCastleQueenSide() {
+        return castleWhiteQueenSide;
+    }
+
+    public boolean canBlackCastleKingSide() {
+        return castleBlackKingSide;
+    }
+
+    public boolean canBlackCastleQueenSide() {
+        return castleBlackQueenSide;
+    }
+    /**
+     * A FEN "record" defines a particular game position, all in one text line and using only the
+     * ASCII character set. A text file with only FEN data records should have the file
+     * extension ".fen".
+     *
+     * A FEN record contains six fields. The separator between fields is a space. The fields are:
+     *
+     * - Piece placement (from White's perspective). Each rank is described, starting with rank 8
+     *   and ending with rank 1; within each rank, the contents of each square are described from
+     *   file "a" through file "h". Following the Standard Algebraic Notation (SAN), each piece is
+     *   identified by a single letter taken from the standard English names (pawn = "P", knight = "N",
+     *   bishop = "B", rook = "R", queen = "Q" and king = "K").[1] White pieces are designated using
+     *   upper-case letters ("PNBRQK") while black pieces use lowercase ("pnbrqk"). Empty squares are
+     *   noted using digits 1 through 8 (the number of empty squares), and "/" separates ranks.
+     *
+     * - Active color. "w" means White moves next, "b" means Black moves next.
+     *
+     * - Castling availability. If neither side can castle, this is "-". Otherwise, this has one or
+     *   more letters: "K" (White can castle kingside), "Q" (White can castle queenside),
+     *   "k" (Black can castle kingside), and/or "q" (Black can castle queenside).
+     *
+     * - En passant target square in algebraic notation. If there's no en passant target square, this
+     *   is "-". If a pawn has just made a two-square move, this is the position "behind" the pawn.
+     *   This is recorded regardless of whether there is a pawn in position to make an en passant
+     *   capture.
+     *
+     * - Halfmove clock: This is the number of halfmoves since the last capture or pawn advance. This
+     *   is used to determine if a draw can be claimed under the fifty-move rule.
+     *   
+     * - Fullmove number: The number of the full move. It starts at 1, and is incremented after Black's
+     *   move.
+     *
+     *   abcdefgh
+     * 8 rnbqkbnr
+     * 7 pppppppp
+     * 6
+     * 5
+     * 4
+     * 3
+     * 2 PPPPPPPP
+     * 1 RNBQKBNR
+     *   abcdefgh
+     *
+     * @param fen
+     */
+    public void setFenPosition(String fen) {
+        resetBoard();
+        castleWhiteKingSide = false;
+        castleWhiteQueenSide = false;
+        castleBlackKingSide = false;
+        castleBlackQueenSide = false;
+
+        int fenPos = 0;
+        int boardIndex = 0;
+        int parsingSection = 0;
+        while(fenPos < fen.length()) {
+            char ch = fen.charAt(fenPos);
+            if(ch == ' ') {
+                parsingSection++;   //parsing the next part of fen
+                fenPos++;
+                continue;   //skip spaces
+            }
+            switch(parsingSection) {
+                case 0:
+                    if(Character.isDigit(ch)) {
+                        int count = ch-'0';
+                        putSpaces(count,boardIndex);
+                        boardIndex += count;
+                    } else if(ch == '/') {
+                        break;   //ignore, and keep going
+//                    } else if(ch == ' ') {
+//                        parsingSection++;   //parsing the next part of fen
+//                        continue;      //end of parsing of known stuff
+                    } else {
+                        gameBoard[boardIndex++] = ch;
+                    }
+                    break;
+
+                case 1:
+                    if(ch == 'w') {
+                        currentMove = WHITE;
+                    } else if(ch == 'b') {
+                        currentMove = BLACK;
+                    } else {
+                        throw new InvalidParameterException(String.format("Color [%c] is not valid",ch));
+                    }
+                    break;
+
+                case 2:
+                    // Castling availability. If neither side can castle, this is "-". Otherwise, this has one or
+                    // more letters: "K" (White can castle kingside), "Q" (White can castle queenside),
+                    // "k" (Black can castle kingside), and/or "q" (Black can castle queenside).
+                    if(ch == '-') {
+                        castleWhiteKingSide = false;
+                        castleWhiteQueenSide = false;
+                        castleBlackKingSide = false;
+                        castleBlackQueenSide = false;
+                    } else if(ch == 'K') {
+                        castleWhiteKingSide = true;
+                    } else if(ch == 'Q') {
+                        castleWhiteQueenSide = true;
+                    } else if(ch == 'k') {
+                        castleBlackKingSide = true;
+                    } else if(ch == 'q') {
+                        castleBlackQueenSide = true;
+//                    } else if(ch == ' ') {
+//                        parsingSection++;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            fenPos++;
+        }
+    }
+
+    private void putSpaces(int numSpaces,int boardIndex) {
+        for(int i =0; i<numSpaces; i++) {
+            gameBoard[boardIndex+i] = ' ';
+        }
+    }
     public int numSquares() {
         return gameBoard.length;
     }
@@ -78,6 +216,11 @@ public class ChessBoard
             gameBoard[i] = boardLetters.charAt(i);
         }
         moveCard.clear();
+        currentMove = WHITE;
+        castleWhiteKingSide = true;
+        castleWhiteQueenSide = true;
+        castleBlackKingSide = true;
+        castleBlackQueenSide = true;
     }
 
     public void setPosition(String letters) {
@@ -122,6 +265,7 @@ public class ChessBoard
         return index;
     }
 
+    /** Convert a board index number to a board position like "a1". */
     public String indexToBoard(int index) {
         int y=index/8;
         int x=index-y*8;
@@ -144,6 +288,14 @@ public class ChessBoard
             moves.append(moveCard.get(i));
         }
         return moves.toString();
+    }
+
+    /**
+     * Convert x,y to a board index.
+     * Top left is 0,0, bottom right is 7,7.
+     */
+    public int toIndex(int x,int y) {
+        return y*8+x;
     }
 
     /** Return what piece is at the given location on the board. Top left is 0,0, bottom right is 7,7.
