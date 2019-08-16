@@ -148,6 +148,8 @@ public class AppFrame extends JFrame implements InvocationHandler {
         reedController = new ChessReedController(gpio,I2CBus.BUS_1);
         reedController.addListener(new GpioPinListenerDigital() {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                //todo Implement a delay to ensure the state of the switch holds open or closed.
+                //todo Like debouncing, but this handles when the piece slides over the dead zone of the reed switch.
                 boolean state = event.getState() == PinState.HIGH ? false:true;
                 final int ledIndex = reedController.findPinIndex(event.getPin().getPin());
 
@@ -187,6 +189,9 @@ public class AppFrame extends JFrame implements InvocationHandler {
      * @param index location piece was dropped.
      */
     public void pieceDown(int index) {
+        //todo If we detect that a piece dropped without a piece being picked up, a piece was added to the board
+        //todo or the board detected the piece up after the down, as would be the case of sliding a piece from one
+        //todo square to the next without picking it up.
         if(gamePieceSelected == -1) {
             System.out.println("Piece dropped but didn't detect piece picked up, ignoring move");
         } else {
@@ -200,17 +205,21 @@ public class AppFrame extends JFrame implements InvocationHandler {
         blink(2,100,index);
     }
 
-    public void blink(int count, long delay, int ledIndex) {
-        try {
-            for(int i = 0; i < count; i++) {
-                ledController.led(ledIndex,true);
-                Thread.sleep(delay);
-                ledController.led(ledIndex,false);
-                Thread.sleep(delay);
+    public void blink(final int count, final long delay, final int ledIndex) {
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    for(int i = 0; i < count; i++) {
+                        ledController.led(ledIndex,true);
+                        Thread.sleep(delay);
+                        ledController.led(ledIndex,false);
+                        Thread.sleep(delay);
+                    }
+                } catch(InterruptedException e) {
+                    ledController.led(ledIndex,false);
+                }
             }
-        } catch(InterruptedException e) {
-            ledController.led(ledIndex,false);
-        }
+        }).start();
     }
 
     public int mapToBoard(int index) {
