@@ -27,9 +27,9 @@ public class BoardPanel extends JPanel {
     Image[] whitePieceImages;
     Image[] letters;
 
-    int xoffset=0;
+    int xoffset=0;  //40
     int yoffset=0;
-    int squareWidth=60;
+    int squareWidth=60;     //80
     int squareHeight=60;
 
     public BoardPanel(AppFrame parent) {
@@ -47,7 +47,6 @@ public class BoardPanel extends JPanel {
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
         renderBoard(g2,xoffset,yoffset,squareWidth);
-//        renderBoard(g2,40,40,80);
         drawPieces(g2);
     }
 
@@ -100,12 +99,9 @@ public class BoardPanel extends JPanel {
     }
 
     public void drawPieces(Graphics2D g2) {
-        if(parent.simBoard.boardInterface.isOccupied(0,0)) {
-            for(int y=0; y<8; ++y) {
-                for(int x=0; x<8; ++x) {
-                    drawPiece(parent.chessBoard.pieceAt(y*8+x),x,y,g2);
-//                    drawPiece(parent.gameBoard[y*8+x],x,y,g2);
-                }
+        for(int y=0; y<8; ++y) {
+            for(int x=0; x<8; ++x) {
+                drawPiece(parent.chessBoard.pieceAt(y*8+x),x,y,g2);
             }
         }
     }

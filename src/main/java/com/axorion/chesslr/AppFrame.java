@@ -28,7 +28,6 @@ import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
-import oled.Font;
 import oled.OLEDDisplay;
 
 import javax.swing.*;
@@ -64,7 +63,6 @@ public class AppFrame extends JFrame implements InvocationHandler {
     int gamePieceCaptured;
     int selectedIndex = -1; //what board index was selected (piece was lifted from the square)
     int capturedIndex = -1; //if you have already picked up a piece, this is the piece you are capturing
-    SimBoard simBoard;
     JFileChooser fileChooser;   //used by windows
     FileDialog fileDialog;      //used by mac
     boolean isMac = false;
@@ -134,11 +132,13 @@ public class AppFrame extends JFrame implements InvocationHandler {
         }
 
         board = new BoardPanel(this);
-        board.setSize(720,720);
         getContentPane().add(board,BorderLayout.CENTER);
         pack();
 
-        simBoard = new SimBoard(this);
+        fastForwardButton.setPreferredSize(new Dimension(75,75));
+        forwardButton.setPreferredSize(new Dimension(75,75));
+        backButton.setPreferredSize(new Dimension(75,75));
+        fastBackButton.setPreferredSize(new Dimension(75,75));
 
         initHardware();
     }
@@ -159,16 +159,6 @@ public class AppFrame extends JFrame implements InvocationHandler {
                     pieceUp(ledIndex);
                 }
 
-//                if(state) {
-//                    display.clear();
-//                    showBoard();
-//                    final int x=9;
-//                    textxy("B00:00:00",x,0);
-//                    textxy("W00:00:00",x,1);
-//                    textxy("led="+ledIndex,x,7);
-//                    updateDisplay();
-//                }
-
             }
         });
         display = new OLEDDisplay(I2CBus.BUS_1,0x3D);
@@ -178,8 +168,6 @@ public class AppFrame extends JFrame implements InvocationHandler {
         resetBoard();
         startup();
         setVisible(true);
-        simBoard.setLocation(getX()+getWidth(),getY());
-//        simBoard.setVisible(true);
     }
 
     /**
@@ -190,11 +178,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
     public void pieceUp(int index) {
         int boardIndex = mapToBoard(index);
         gamePieceSelected = boardIndex;
-        System.out.format("Piece at [%d] [%s] was selected\n",index,chessBoard.indexToBoard(boardIndex));
         blink(1,100,index);
-        display.clear();
-        showBoard();
-        updateDisplay();
     }
 
     /**
@@ -203,17 +187,17 @@ public class AppFrame extends JFrame implements InvocationHandler {
      * @param index location piece was dropped.
      */
     public void pieceDown(int index) {
-        int boardIndex = mapToBoard(index);
-        String playersMove = chessBoard.indexToBoard(gamePieceSelected)+chessBoard.indexToBoard(boardIndex);
-        chessBoard.move(playersMove);
-        gamePieceSelected = -1;
-        System.out.format("Piece dropped at [%d] [%s] move=[%s]\n",index,chessBoard.indexToBoard(boardIndex),playersMove);
-//        showBoard();
-//        updateDisplay();
-        repaint();
+        if(gamePieceSelected == -1) {
+            System.out.println("Piece dropped but didn't detect piece picked up, ignoring move");
+        } else {
+            int boardIndex = mapToBoard(index);
+            String playersMove = chessBoard.indexToBoard(gamePieceSelected)+chessBoard.indexToBoard(boardIndex);
+            chessBoard.move(playersMove);
+            gamePieceSelected = -1;
+            System.out.format("Piece dropped at [%d] [%s] move=[%s]\n",index,chessBoard.indexToBoard(boardIndex),playersMove);
+        }
         board.repaint();
         blink(2,100,index);
-
     }
 
     public void blink(int count, long delay, int ledIndex) {
@@ -233,141 +217,25 @@ public class AppFrame extends JFrame implements InvocationHandler {
         int[] map = {56,57,58,48,49,50,40,41,42};
         return map[index];
     }
-    public void showBoard() {
-        StringBuilder builder = new StringBuilder();
-        int y=0,x=0;
-        int index=0;
-        int w= oled.Font.FONT_5X8.getOuterWidth()+1;
-        int h=8;
-        int tx;
-        int ty;
-
-        for(ty=0; ty<8; ty++) {
-            builder.delete(0,8);
-            for(tx=0; tx<8; tx++) {
-                x=tx*w;
-                y=ty*h;
-                if(gamePieceSelected == index) {
-                    display.clearRect(x,y,w,h,true);
-                    display.drawChar(chessBoard.pieceAt(index++),oled.Font.FONT_5X8,x,y,false);
-                } else {
-                    display.clearRect(x,y,w,h,false);
-                    display.drawChar(chessBoard.pieceAt(index++),oled.Font.FONT_5X8,x,y,true);
-                }
-            }
-        }
-    }
-
-    public void showBoardComponents() throws IOException {
-        display.clear();
-        showBoard();
-        final int x=9;
-        int y=0;
-        textxy("B00:00:00",x,y++);
-        textxy("W00:00:00",x,y++);
-        textxy("1 b3  d5",x,y++);
-        textxy("2 O-O-O",x,y++);
-        textxy("2.. O-O-O",x,y++);
-        textxy("3 Nf3 Nf6",x,y++);
-        textxy("4 g3  Bc5",x,y++);
-        textxy("5 Bg2 O-O",x,y++);
-        textxy("6 *",x,y++);
-    }
-
-    public void drawRect(OLEDDisplay display,int xpos,int ypos,int width,int height,boolean on) {
-        int y=ypos;
-        int x=xpos;
-        for(x=xpos; x<xpos+width-1; ++x) {
-            display.setPixel(x,y,on);
-        }
-        y=ypos+height-1;
-        for(x=xpos; x<xpos+width-1; ++x) {
-            display.setPixel(x,y,on);
-        }
-
-        x=xpos;
-        for(y=ypos; y<ypos+height-1; ++y) {
-            display.setPixel(x,y,on);
-        }
-        x=xpos+width-1;
-        for(y=ypos; y<ypos+height-1; ++y) {
-            display.setPixel(x,y,on);
-        }
-    }
-
-    public void textxy(String s,int tx,int ty) {
-        int w= oled.Font.FONT_5X8.getOuterWidth()+1;
-        int h=8;
-        int x=tx*w;
-        int y=ty*h;
-        for(int i=0; i<s.length(); i++) {
-            display.drawChar(s.charAt(i),Font.FONT_5X8,(tx+i)*w,ty*h,true);
-        }
-    }
-
-    public void updateDisplay() {
-        try {
-            display.update();
-        } catch(IOException ex) {
-            //do nothing
-        }
-    }
 
     public void startup() throws IOException {
-        drawRect(display,0,0,display.getWidth(),display.getHeight(),true);
-        display.drawStringCentered("ChessLR",Font.FONT_5X8,display.getHeight()/2-4,true);
-        display.update();
-
         try {
             for(int i = 0; i < 9; ++i) {
                 ledController.led(i,true);
                 Thread.sleep(100);
                 ledController.led(i,false);
             }
-
-//            for(int i=0; i<9; ++i) {
-//                ledController.led(i,reedController.isSet(i));
-//            }
-
         } catch(InterruptedException e) {
             //do nothing
         }
-//        ledController.led(1,true);
-//        ledController.blink(0,5000);
-
-        display.clear();
-        showBoardComponents();
-        display.update();
     }
 
     /** Player has lifted a piece, or in other words, the sensor no longer sees a piece. */
     public void pieceUp(int x,int y) {
         final int idx = chessBoard.toIndex(x,y);
         final int piece = chessBoard.pieceAt(idx);
-//        if(selectedIndex == -1) {
-//            capturedIndex = idx;
-//            System.out.println("piece ["+(char)chessBoard.pieceAt(idx)+"] removed during capture");
-//            gamePieceCaptured = gameBoard[idx];
-//            gameBoard[idx] = 0;
-//        } else {
-//            char c = (char)gameBoard[idx];
-//            gamePieceSelected = gameBoard[idx];
-//            gameBoard[idx] = 0;
-//            System.out.println("piece ["+c+"] at ["+x+","+y+"] picked up");
-//        }
 
         selectedIndex = idx;
-
-//        if(gamePieceSelected != 0) {
-//            System.out.println("piece ["+(char)gameBoard[idx]+"] removed during capture");
-//            gamePieceCaptured = gameBoard[idx];
-//            gameBoard[idx] = 0;
-//        } else {
-//            char c = (char)gameBoard[idx];
-//            gamePieceSelected = gameBoard[idx];
-//            gameBoard[idx] = 0;
-//            System.out.println("piece ["+c+"] at ["+x+","+y+"] picked up");
-//        }
     }
 
     public void pieceDown(int x,int y) {
@@ -380,7 +248,6 @@ public class AppFrame extends JFrame implements InvocationHandler {
     }
 
     private void resetBoard() {
-        simBoard.boardInterface.reset();
         chessBoard.resetBoard();
         board.repaint();
     }
@@ -511,8 +378,6 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
     private void newMenuItemActionPerformed(ActionEvent e) {
         resetBoard();
-        simBoard.boardInterface.reset();
-        simBoard.repaint();
     }
 
 
@@ -528,6 +393,11 @@ public class AppFrame extends JFrame implements InvocationHandler {
         helpMenu = new JMenu();
         helpMenuItem = new JMenuItem();
         aboutMenuItem = new JMenuItem();
+        panel1 = new JPanel();
+        fastBackButton = new JButton();
+        backButton = new JButton();
+        forwardButton = new JButton();
+        fastForwardButton = new JButton();
 
         //======== this ========
         setResizable(false);
@@ -614,6 +484,30 @@ public class AppFrame extends JFrame implements InvocationHandler {
             menuBar1.add(helpMenu);
         }
         setJMenuBar(menuBar1);
+
+        //======== panel1 ========
+        {
+            panel1.setMinimumSize(new Dimension(337, 50));
+            panel1.setLayout(new FlowLayout());
+
+            //---- fastBackButton ----
+            fastBackButton.setText("<<");
+            panel1.add(fastBackButton);
+
+            //---- backButton ----
+            backButton.setText("<");
+            panel1.add(backButton);
+
+            //---- forwardButton ----
+            forwardButton.setText(">");
+            panel1.add(forwardButton);
+
+            //---- fastForwardButton ----
+            fastForwardButton.setMinimumSize(new Dimension(78, 78));
+            fastForwardButton.setText(">>");
+            panel1.add(fastForwardButton);
+        }
+        contentPane.add(panel1, BorderLayout.SOUTH);
         pack();
         setLocationRelativeTo(getOwner());
         // JFormDesigner - End of component initialization  //GEN-END:initComponents
@@ -630,5 +524,10 @@ public class AppFrame extends JFrame implements InvocationHandler {
     private JMenu helpMenu;
     private JMenuItem helpMenuItem;
     private JMenuItem aboutMenuItem;
+    private JPanel panel1;
+    private JButton fastBackButton;
+    private JButton backButton;
+    private JButton forwardButton;
+    private JButton fastForwardButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 }

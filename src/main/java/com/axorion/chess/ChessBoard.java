@@ -267,9 +267,15 @@ public class ChessBoard
 
     /** Convert a board index number to a board position like "a1". */
     public String indexToBoard(int index) {
-        int y=index/8;
-        int x=index-y*8;
-        return String.format("%s%s",horz.charAt(x),vert.charAt(y));
+        int y = index/8;
+        int x = index-y*8;
+        try {
+            return String.format("%s%s",horz.charAt(x),vert.charAt(y));
+        } catch(StringIndexOutOfBoundsException e) {
+            System.out.println("coords x=["+x+"] y=["+y+"] horz=["+horz+"] vert=["+vert+"]");
+            e.printStackTrace();
+        }
+        return "";
     }
 
     /** A list of all the moves in chess coordinates like "e2e3". Always has from and to coordinates. */
