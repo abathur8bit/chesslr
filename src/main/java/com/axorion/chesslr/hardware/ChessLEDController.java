@@ -160,6 +160,12 @@ public class ChessLEDController {
         }
     }
 
+    /**
+     * Turn the specified LED on or off.
+     *
+     * @param led LED index number.
+     * @param on true to turn on, false to turn off.
+     */
     public void led(int led,boolean on) {
         int bank = calcBank(led);
         int bankLed = calcBankLed(bank,led);

@@ -41,6 +41,8 @@ public class BoardPanel extends JPanel {
 
         pieceStrip = parent.loadImage("alpha_black.png");
         letters = parent.loadImageStrip("letters.png",16,172/16,12,0);
+
+        setPreferredSize(new Dimension(squareWidth*8,squareHeight*8));
     }
 
     @Override

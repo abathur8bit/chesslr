@@ -41,6 +41,7 @@ public class ChessLR {
             } else {
                 setDefaultSize();
             }
+            setDefaultSize();   //part or all of the window is positioned outside of the screen
             instance.startApp();
         } catch(Exception e) {
             handleError("Unable to start application",e);
@@ -48,7 +49,7 @@ public class ChessLR {
     }
 
     public static void setDefaultSize() {
-        instance.setSize(480,800);
+        instance.setSize(480,780);
         instance.setLocationRelativeTo(null);
     }
 

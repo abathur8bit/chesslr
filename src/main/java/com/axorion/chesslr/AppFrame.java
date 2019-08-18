@@ -31,6 +31,7 @@ import com.pi4j.io.i2c.I2CFactory;
 import oled.OLEDDisplay;
 
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -133,23 +134,53 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
         board = new BoardPanel(this);
         getContentPane().add(board,BorderLayout.CENTER);
+        //some
+//        movesTextArea.setText("1.d4 Nf6 2.c4 g6 3.f3 c5 4.d5 d6 5.Nc3 e6 6.e4 Bg7 7.Nge2 exd5 "+
+//                "8.cxd5 a6 9.a4 Nbd7 10.Ng3 h5 11.Be2 h4 12.Nf1 Nh5 13.Be3 f5 "+
+//                "14.exf5 gxf5 15.Nd2 Ne5 16.f4 Ng4 17.Nc4 O-O 18.O-O Ng3 19.hxg3 "+
+//                "hxg3 20.Bxg4 fxg4 21.Ne4 Qh4 22.Nxg3 Qxg3 23.Qe1 Qxe1 24.Raxe1 "+
+//                "Bd7 25.Nxd6 Bxa4 26.Bxc5 b6 27.Ba3 Bb3 28.Kh2 Bxd5 29.Kg3 b5 "+
+//                "30.Rd1 Ba2 31.Kxg4 Rab8 32.Bc5 b4 33.Rd2 a5 34.Ra1 b3 35.Re1 "+
+//                "Rxf4+ 36.Kxf4 Bh6+ 37.Kg4 Bxd2 38.Re7 Bb4 39.Bxb4 Rxb4+ 40.Kg5 "+
+//                "Bb1 41.Ra7 a4 42.Ne8 Kf8 43.Nf6 Rd4");
+        movesAutoScroll();
         pack();
 
-        fastForwardButton.setPreferredSize(new Dimension(75,75));
-        forwardButton.setPreferredSize(new Dimension(75,75));
-        backButton.setPreferredSize(new Dimension(75,75));
-        fastBackButton.setPreferredSize(new Dimension(75,75));
+        setButtonImage(backButton,"button-back.png");
+        setButtonImage(fastBackButton,"button-fastback.png");
+        setButtonImage(forwardButton,"button-forward.png");
+        setButtonImage(fastForwardButton,"button-fastforward.png");
 
         initHardware();
     }
 
+    /** Any text that is added to the moves text area will automatically scroll into view. */
+    private void movesAutoScroll() {
+        DefaultCaret caret = (DefaultCaret) movesTextArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+    }
+
+    private void setButtonImage(JButton bn,String iconName) {
+        Dimension size = new Dimension(75,75);
+        bn.setText("");
+        bn.setIcon(new ImageIcon(loadImage(iconName)));
+        bn.setPreferredSize(size);
+    }
+
     private void initHardware() throws IOException, I2CFactory.UnsupportedBusNumberException {
-        ledController = new ChessLEDController(gpio,I2CBus.BUS_1);
-        reedController = new ChessReedController(gpio,I2CBus.BUS_1);
+        final int bus = I2CBus.BUS_1;
+
+//        final int baseAddress = 0x21;
+//        MCP23017GpioProvider provider = new MCP23017GpioProvider(bus,baseAddress);
+
+        ledController = new ChessLEDController(gpio,bus);
+
+        reedController = new ChessReedController(gpio,bus);
         reedController.addListener(new GpioPinListenerDigital() {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                //todo Implement a delay to ensure the state of the switch holds open or closed.
-                //todo Like debouncing, but this handles when the piece slides over the dead zone of the reed switch.
+                //TODO
+                // Implement a delay to ensure the state of the switch holds open or closed.
+                // Like debouncing, but this handles when the piece slides over the dead zone of a reed switch.
                 boolean state = event.getState() == PinState.HIGH ? false:true;
                 final int ledIndex = reedController.findPinIndex(event.getPin().getPin());
 
@@ -189,20 +220,35 @@ public class AppFrame extends JFrame implements InvocationHandler {
      * @param index location piece was dropped.
      */
     public void pieceDown(int index) {
-        //todo If we detect that a piece dropped without a piece being picked up, a piece was added to the board
-        //todo or the board detected the piece up after the down, as would be the case of sliding a piece from one
-        //todo square to the next without picking it up.
+        //TODO
+        // If we detect that a piece dropped without a piece being picked up, a piece was added to the board
+        // or the board detected the piece up after the down, as would be the case of sliding a piece from one
+        // square to the next without picking it up.
         if(gamePieceSelected == -1) {
-            System.out.println("Piece dropped but didn't detect piece picked up, ignoring move");
+            System.out.println("Piece dropped but didn't detect piece picked up, finding if there is a piece missing on the board");
+            int missingPieceIndex = findMissingPiece();
         } else {
             int boardIndex = mapToBoard(index);
             String playersMove = chessBoard.indexToBoard(gamePieceSelected)+chessBoard.indexToBoard(boardIndex);
             chessBoard.move(playersMove);
+            movesTextArea.setText(chessBoard.getMoveString());
+
             gamePieceSelected = -1;
             System.out.format("Piece dropped at [%d] [%s] move=[%s]\n",index,chessBoard.indexToBoard(boardIndex),playersMove);
         }
         board.repaint();
         blink(2,100,index);
+    }
+
+    /**
+     * Compares what is on the e-board to what is in the chessBoard array. If they don't match up, return the piece
+     * that is in the chessBoard and not on the e-board.
+     * @return Index of missing piece, -1 if none missing.
+     */
+    private int findMissingPiece() {
+        for(int i = 0; i < 64; i++) {
+        }
+        return -1;
     }
 
     public void blink(final int count, final long delay, final int ledIndex) {
@@ -403,6 +449,9 @@ public class AppFrame extends JFrame implements InvocationHandler {
         helpMenuItem = new JMenuItem();
         aboutMenuItem = new JMenuItem();
         panel1 = new JPanel();
+        movesScrollPane = new JScrollPane();
+        movesTextArea = new JTextArea();
+        panel2 = new JPanel();
         fastBackButton = new JButton();
         backButton = new JButton();
         forwardButton = new JButton();
@@ -497,24 +546,45 @@ public class AppFrame extends JFrame implements InvocationHandler {
         //======== panel1 ========
         {
             panel1.setMinimumSize(new Dimension(337, 50));
-            panel1.setLayout(new FlowLayout());
+            panel1.setLayout(new BorderLayout());
 
-            //---- fastBackButton ----
-            fastBackButton.setText("<<");
-            panel1.add(fastBackButton);
+            //======== movesScrollPane ========
+            {
+                movesScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                movesScrollPane.setAutoscrolls(true);
+                movesScrollPane.setPreferredSize(new Dimension(3629, 150));
 
-            //---- backButton ----
-            backButton.setText("<");
-            panel1.add(backButton);
+                //---- movesTextArea ----
+                movesTextArea.setWrapStyleWord(true);
+                movesTextArea.setEditable(false);
+                movesTextArea.setLineWrap(true);
+                movesTextArea.setFont(new Font("Monospaced", Font.PLAIN, 18));
+                movesScrollPane.setViewportView(movesTextArea);
+            }
+            panel1.add(movesScrollPane, BorderLayout.CENTER);
 
-            //---- forwardButton ----
-            forwardButton.setText(">");
-            panel1.add(forwardButton);
+            //======== panel2 ========
+            {
+                panel2.setLayout(new FlowLayout());
 
-            //---- fastForwardButton ----
-            fastForwardButton.setMinimumSize(new Dimension(78, 78));
-            fastForwardButton.setText(">>");
-            panel1.add(fastForwardButton);
+                //---- fastBackButton ----
+                fastBackButton.setText("<<");
+                panel2.add(fastBackButton);
+
+                //---- backButton ----
+                backButton.setText("<");
+                panel2.add(backButton);
+
+                //---- forwardButton ----
+                forwardButton.setText(">");
+                panel2.add(forwardButton);
+
+                //---- fastForwardButton ----
+                fastForwardButton.setMinimumSize(new Dimension(78, 78));
+                fastForwardButton.setText(">>");
+                panel2.add(fastForwardButton);
+            }
+            panel1.add(panel2, BorderLayout.SOUTH);
         }
         contentPane.add(panel1, BorderLayout.SOUTH);
         pack();
@@ -534,6 +604,9 @@ public class AppFrame extends JFrame implements InvocationHandler {
     private JMenuItem helpMenuItem;
     private JMenuItem aboutMenuItem;
     private JPanel panel1;
+    private JScrollPane movesScrollPane;
+    private JTextArea movesTextArea;
+    private JPanel panel2;
     private JButton fastBackButton;
     private JButton backButton;
     private JButton forwardButton;

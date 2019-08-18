@@ -3,7 +3,7 @@
 # $ 1 - first param (no space)
 # $# - number of command line params
 
-# Exports the display so you can run remotely, kills any existing instances, runs the app.
+# Exports the display so you can run remotely, kills any existing instances, turns off screen saver, runs the app.
 #
 # Should be run on the remote machine. You can use a command like the following
 # on your local machine to run it on the remote machine.
@@ -16,5 +16,6 @@
 export DISPLAY=:0
 killall java
 cd chesslr
+xset s off
 java $1 -classpath ../lib/'*':target/classes com.axorion.chesslr.ChessLR
 

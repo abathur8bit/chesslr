@@ -8,25 +8,45 @@ new FormModel {
 			"resizable": false
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentMoved", "windowMoved", true ) )
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentResized", "windowResized", true ) )
-			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) ) {
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 				name: "panel1"
 				"minimumSize": new java.awt.Dimension( 337, 50 )
-				add( new FormComponent( "javax.swing.JButton" ) {
-					name: "fastBackButton"
-					"text": "<<"
+				add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+					name: "movesScrollPane"
+					"horizontalScrollBarPolicy": 31
+					"autoscrolls": true
+					"preferredSize": new java.awt.Dimension( 3629, 150 )
+					add( new FormComponent( "javax.swing.JTextArea" ) {
+						name: "movesTextArea"
+						"wrapStyleWord": true
+						"editable": false
+						"lineWrap": true
+						"font": new java.awt.Font( "Monospaced", 0, 18 )
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "Center"
 				} )
-				add( new FormComponent( "javax.swing.JButton" ) {
-					name: "backButton"
-					"text": "<"
-				} )
-				add( new FormComponent( "javax.swing.JButton" ) {
-					name: "forwardButton"
-					"text": ">"
-				} )
-				add( new FormComponent( "javax.swing.JButton" ) {
-					name: "fastForwardButton"
-					"minimumSize": new java.awt.Dimension( 78, 78 )
-					"text": ">>"
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) ) {
+					name: "panel2"
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "fastBackButton"
+						"text": "<<"
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "backButton"
+						"text": "<"
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "forwardButton"
+						"text": ">"
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "fastForwardButton"
+						"minimumSize": new java.awt.Dimension( 78, 78 )
+						"text": ">>"
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "South"
 				} )
 			}, new FormLayoutConstraints( class java.lang.String ) {
 				"value": "South"
