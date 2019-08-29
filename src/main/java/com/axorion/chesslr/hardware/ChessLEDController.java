@@ -51,7 +51,7 @@ import java.io.IOException;
  *   NC ---- |14       15| <--- A0
  *           +-----------+
  */
-public class ChessLEDController {
+public class ChessLEDController implements LEDController {
     class FadeThread implements Runnable {
         boolean running = true;
         boolean onState = false;
@@ -129,29 +129,35 @@ public class ChessLEDController {
             BASE_ADDRESS+3,
     };
     Pin[] pins = {
-          MCP23017Pin.GPIO_B0,
-          MCP23017Pin.GPIO_B1,
-          MCP23017Pin.GPIO_B2,
-          MCP23017Pin.GPIO_B3,
-          MCP23017Pin.GPIO_B4,
-          MCP23017Pin.GPIO_B5,
-          MCP23017Pin.GPIO_B6,
-          MCP23017Pin.GPIO_B7,
-          MCP23017Pin.GPIO_A0,
-          MCP23017Pin.GPIO_A1,
-          MCP23017Pin.GPIO_A2,
-          MCP23017Pin.GPIO_A3,
-          MCP23017Pin.GPIO_A4,
-          MCP23017Pin.GPIO_A5,
-          MCP23017Pin.GPIO_A6,
-          MCP23017Pin.GPIO_A7,
+            MCP23017Pin.GPIO_A0,
+            MCP23017Pin.GPIO_A1,
+            MCP23017Pin.GPIO_A2,
+            MCP23017Pin.GPIO_A3,
+            MCP23017Pin.GPIO_A4,
+            MCP23017Pin.GPIO_A5,
+            MCP23017Pin.GPIO_A6,
+            MCP23017Pin.GPIO_A7,
+
+            MCP23017Pin.GPIO_B0,
+            MCP23017Pin.GPIO_B1,
+            MCP23017Pin.GPIO_B2,
+            MCP23017Pin.GPIO_B3,
+            MCP23017Pin.GPIO_B4,
+            MCP23017Pin.GPIO_B5,
+            MCP23017Pin.GPIO_B6,
+            MCP23017Pin.GPIO_B7,
     };
 
     public ChessLEDController() {}
     public ChessLEDController(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
+        init(gpio,bus);
+    }
+
+    public void init(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
         this.gpio = gpio;
         provider = new MCP23017GpioProvider(bus,BASE_ADDRESS);
         initBank(0);
+
     }
 
     protected void initBank(int bank) {
@@ -194,6 +200,12 @@ public class ChessLEDController {
     protected void set(int bank,int led,boolean on) {
         PinState state = on?PinState.HIGH:PinState.LOW;
         out[led].setState(state);
+    }
+
+    public boolean isOn(int led) {
+        int bank = calcBank(led);
+        int bankLed = calcBankLed(bank,led);
+        return out[led].getState() == PinState.HIGH;
     }
 
     public int calcBank(int led) {

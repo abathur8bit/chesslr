@@ -21,9 +21,11 @@ package com.axorion.chesslr;
 import com.axorion.chess.ChessBoard;
 import com.axorion.chesslr.hardware.ChessLEDController;
 import com.axorion.chesslr.hardware.ChessReedController;
+import com.axorion.chesslr.hardware.InputController;
+import com.axorion.chesslr.hardware.LEDController;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.gpio.Pin;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
@@ -47,23 +49,23 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
 
+import static java.awt.Image.SCALE_SMOOTH;
+
 /**
  * @author Lee Patterson
  */
 public class AppFrame extends JFrame implements InvocationHandler {
-    final GpioController gpio = GpioFactory.getInstance();
-    ChessLEDController ledController;
-    ChessReedController reedController;
+    GpioController gpio;
+    LEDController ledController;
+    InputController reedController;
     OLEDDisplay display;
 
     String whitePieceLetters = "PNBRQK";
     String blackPieceLetters = "pnbrqk";
     BoardPanel board;
     ChessBoard chessBoard = new ChessBoard();
-    int gamePieceSelected;
-    int gamePieceCaptured;
-    int selectedIndex = -1; //what board index was selected (piece was lifted from the square)
-    int capturedIndex = -1; //if you have already picked up a piece, this is the piece you are capturing
+    Integer pieceUpIndex = -1;      //the square that a piece was lifted from
+    Integer pieceDownIndex = -1;    //the square that a piece was dropped onto
     JFileChooser fileChooser;   //used by windows
     FileDialog fileDialog;      //used by mac
     boolean isMac = false;
@@ -83,9 +85,13 @@ public class AppFrame extends JFrame implements InvocationHandler {
             Color.orange,
     };
     int colorIndex=0;
+    boolean isShowingPieces = false;
+    MoveThread moveThread = new MoveThread(this);
+    boolean boardAttached;
 
-    public AppFrame(String title) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
+    public AppFrame(String title,boolean boardAttached) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
+        this.boardAttached = boardAttached;
         prefs = new ChessPrefs(this);
         prefs.loadPrefs();
 
@@ -133,16 +139,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
         }
 
         board = new BoardPanel(this);
-        getContentPane().add(board,BorderLayout.CENTER);
-        //some
-//        movesTextArea.setText("1.d4 Nf6 2.c4 g6 3.f3 c5 4.d5 d6 5.Nc3 e6 6.e4 Bg7 7.Nge2 exd5 "+
-//                "8.cxd5 a6 9.a4 Nbd7 10.Ng3 h5 11.Be2 h4 12.Nf1 Nh5 13.Be3 f5 "+
-//                "14.exf5 gxf5 15.Nd2 Ne5 16.f4 Ng4 17.Nc4 O-O 18.O-O Ng3 19.hxg3 "+
-//                "hxg3 20.Bxg4 fxg4 21.Ne4 Qh4 22.Nxg3 Qxg3 23.Qe1 Qxe1 24.Raxe1 "+
-//                "Bd7 25.Nxd6 Bxa4 26.Bxc5 b6 27.Ba3 Bb3 28.Kh2 Bxd5 29.Kg3 b5 "+
-//                "30.Rd1 Ba2 31.Kxg4 Rab8 32.Bc5 b4 33.Rd2 a5 34.Ra1 b3 35.Re1 "+
-//                "Rxf4+ 36.Kxf4 Bh6+ 37.Kg4 Bxd2 38.Re7 Bb4 39.Bxb4 Rxb4+ 40.Kg5 "+
-//                "Bb1 41.Ra7 a4 42.Ne8 Kf8 43.Nf6 Rd4");
+        getContentPane().add(board,BorderLayout.NORTH);
         movesAutoScroll();
         pack();
 
@@ -150,8 +147,14 @@ public class AppFrame extends JFrame implements InvocationHandler {
         setButtonImage(fastBackButton,"button-fastback.png");
         setButtonImage(forwardButton,"button-forward.png");
         setButtonImage(fastForwardButton,"button-fastforward.png");
+        setButtonImage(showPieces,"button-show.png");
+        setButtonImage(resetButton,"button-reset.png");
 
-        initHardware();
+        if(boardAttached) {
+            gpio = GpioFactory.getInstance();
+            initHardware();
+            moveThread.start();
+        }
     }
 
     /** Any text that is added to the moves text area will automatically scroll into view. */
@@ -161,10 +164,12 @@ public class AppFrame extends JFrame implements InvocationHandler {
     }
 
     private void setButtonImage(JButton bn,String iconName) {
-        Dimension size = new Dimension(75,75);
+        final int size = 50;
+        Dimension preferredSize = new Dimension(size,size);
         bn.setText("");
-        bn.setIcon(new ImageIcon(loadImage(iconName)));
-        bn.setPreferredSize(size);
+        Image im = loadImage(iconName).getScaledInstance((int)(size*0.8),(int)(size*0.8),SCALE_SMOOTH);
+        bn.setIcon(new ImageIcon(im));
+        bn.setPreferredSize(preferredSize);
     }
 
     private void initHardware() throws IOException, I2CFactory.UnsupportedBusNumberException {
@@ -178,25 +183,49 @@ public class AppFrame extends JFrame implements InvocationHandler {
         reedController = new ChessReedController(gpio,bus);
         reedController.addListener(new GpioPinListenerDigital() {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                //TODO
-                // Implement a delay to ensure the state of the switch holds open or closed.
-                // Like debouncing, but this handles when the piece slides over the dead zone of a reed switch.
-                boolean state = event.getState() == PinState.HIGH ? false:true;
-                final int ledIndex = reedController.findPinIndex(event.getPin().getPin());
+                //TODO If there is a piece up and we got a down, then we moved the up location to down location
+                //TODO If there was a down, but no up, then wait for an up, and move that up to the down location.
 
-//                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
+                final Pin pin = event.getPin().getPin();
+                final int index = reedController.findPinIndex(pin);
+//                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " index = "+index);
 
-                if(state) {
-                    pieceDown(ledIndex);
+                if(reedController.stateIsDown(event.getState())) {
+                    pieceDown(index);
                 } else {
-                    pieceUp(ledIndex);
+                    pieceUp(index);
                 }
-
             }
         });
-        display = new OLEDDisplay(I2CBus.BUS_1,0x3D);
+//        display = new OLEDDisplay(I2CBus.BUS_1,0x3D);
+//        display.clear();
+//        drawRect(display,0,0,display.getWidth(),display.getHeight(),true);
+//        display.drawStringCentered("ChessLR",oled.Font.FONT_5X8,display.getHeight()/2-4,true);
+//        display.update();
 
     }
+
+    public void drawRect(OLEDDisplay display,int xpos,int ypos,int width,int height,boolean on) {
+        int y=ypos;
+        int x=xpos;
+        for(x=xpos; x<xpos+width-1; ++x) {
+            display.setPixel(x,y,on);
+        }
+        y=ypos+height-1;
+        for(x=xpos; x<xpos+width-1; ++x) {
+            display.setPixel(x,y,on);
+        }
+
+        x=xpos;
+        for(y=ypos; y<ypos+height-1; ++y) {
+            display.setPixel(x,y,on);
+        }
+        x=xpos+width-1;
+        for(y=ypos; y<ypos+height-1; ++y) {
+            display.setPixel(x,y,on);
+        }
+    }
+
     public void startApp() throws IOException {
         resetBoard();
         startup();
@@ -209,9 +238,16 @@ public class AppFrame extends JFrame implements InvocationHandler {
      * @param index location piece was picked up from.
      */
     public void pieceUp(int index) {
-        int boardIndex = mapToBoard(index);
-        gamePieceSelected = boardIndex;
-        blink(1,100,index);
+        if(isShowingPieces) {
+            showPieces(true);
+        } else {
+            if(pieceUpIndex == -1) {
+                //only process the first lift, as others are the piece moving around
+                pieceUpIndex = mapToBoard(index);
+                ledController.led(mapToPin(pieceUpIndex),true);
+                processMove();
+            }
+        }
     }
 
     /**
@@ -220,41 +256,33 @@ public class AppFrame extends JFrame implements InvocationHandler {
      * @param index location piece was dropped.
      */
     public void pieceDown(int index) {
-        //TODO
-        // If we detect that a piece dropped without a piece being picked up, a piece was added to the board
-        // or the board detected the piece up after the down, as would be the case of sliding a piece from one
-        // square to the next without picking it up.
-        if(gamePieceSelected == -1) {
-            System.out.println("Piece dropped but didn't detect piece picked up, finding if there is a piece missing on the board");
-            int missingPieceIndex = findMissingPiece();
+        if(isShowingPieces) {
+            showPieces(true);
         } else {
-            int boardIndex = mapToBoard(index);
-            String playersMove = chessBoard.indexToBoard(gamePieceSelected)+chessBoard.indexToBoard(boardIndex);
-            chessBoard.move(playersMove);
-            movesTextArea.setText(chessBoard.getMoveString());
-
-            gamePieceSelected = -1;
-            System.out.format("Piece dropped at [%d] [%s] move=[%s]\n",index,chessBoard.indexToBoard(boardIndex),playersMove);
+            if(pieceDownIndex != -1) {
+                ledController.led(mapToPin(pieceDownIndex),false);    //turn off previous led
+            }
+            pieceDownIndex = mapToBoard(index);
+            ledController.led(mapToPin(pieceDownIndex),true);
+            processMove();
         }
-        board.repaint();
-        blink(2,100,index);
     }
 
-    /**
-     * Compares what is on the e-board to what is in the chessBoard array. If they don't match up, return the piece
-     * that is in the chessBoard and not on the e-board.
-     * @return Index of missing piece, -1 if none missing.
-     */
-    private int findMissingPiece() {
-        for(int i = 0; i < 64; i++) {
+    /** If we have a square that had a piece up and one down, then we can process a move. */
+    private void processMove() {
+        if(pieceUpIndex != -1 && pieceDownIndex != -1) {
+            moveThread.waitForMoveComplete(pieceUpIndex,pieceDownIndex);
         }
-        return -1;
     }
 
     public void blink(final int count, final long delay, final int ledIndex) {
         new Thread(new Runnable() {
             public void run() {
                 try {
+                    if(ledController.isOn(ledIndex)) {
+                        ledController.led(ledIndex,false);
+                        Thread.sleep(delay);
+                    }
                     for(int i = 0; i < count; i++) {
                         ledController.led(ledIndex,true);
                         Thread.sleep(delay);
@@ -268,42 +296,47 @@ public class AppFrame extends JFrame implements InvocationHandler {
         }).start();
     }
 
-    public int mapToBoard(int index) {
-        int[] map = {56,57,58,48,49,50,40,41,42};
-        return map[index];
+    public int mapToBoard(int pinIndex) {
+        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42};
+        return pinToBoardMap[pinIndex];
+    }
+
+    public int mapToPin(int boardIndex) {
+        int[] boardToPinMap = {
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                6,7,8,0,0,0,0,0,
+                3,4,5,0,0,0,0,0,
+                0,1,2,0,0,0,0,0
+        };
+        return boardToPinMap[boardIndex];
+
     }
 
     public void startup() throws IOException {
-        try {
-            for(int i = 0; i < 9; ++i) {
-                ledController.led(i,true);
-                Thread.sleep(100);
-                ledController.led(i,false);
+        if(boardAttached) {
+            try {
+                for(int i = 0; i < 9; ++i) {
+                    ledController.led(i,true);
+                    Thread.sleep(100);
+                    ledController.led(i,false);
+                }
+            } catch(InterruptedException e) {
+                //do nothing
             }
-        } catch(InterruptedException e) {
-            //do nothing
         }
     }
 
-    /** Player has lifted a piece, or in other words, the sensor no longer sees a piece. */
-    public void pieceUp(int x,int y) {
-        final int idx = chessBoard.toIndex(x,y);
-        final int piece = chessBoard.pieceAt(idx);
-
-        selectedIndex = idx;
-    }
-
-    public void pieceDown(int x,int y) {
-        final int droppedIndex = chessBoard.toIndex(x,y);
-        String move = chessBoard.indexToBoard(selectedIndex)+chessBoard.indexToBoard(droppedIndex);
-        System.out.printf("Move [%s] piece [%c]\n",move,chessBoard.pieceAt(selectedIndex));
-        chessBoard.move(move);
-        selectedIndex = -1;
-        capturedIndex = -1;
-    }
-
     private void resetBoard() {
+        showPieces(false);
         chessBoard.resetBoard();
+        pieceUpIndex = -1;
+        pieceDownIndex = -1;
+        isShowingPieces = false;
+        movesTextArea.setText("");
         board.repaint();
     }
 
@@ -435,6 +468,37 @@ public class AppFrame extends JFrame implements InvocationHandler {
         resetBoard();
     }
 
+    private void showPiecesActionPerformed(ActionEvent e) {
+        if(isShowingPieces) {
+            showPieces(false);
+        } else {
+            showPieces(true);
+        }
+    }
+
+    private void showPieces(boolean show) {
+        isShowingPieces = show;
+        if(boardAttached) {
+            if(isShowingPieces) {
+                for(int i = 0; i < 9; i++) {
+                    ledController.led(i,reedController.isSet(i));
+                }
+            } else {
+                for(int i = 0; i < 9; i++) {
+                    ledController.led(i,false);
+                }
+            }
+        }
+    }
+
+    private void resetButtonActionPerformed(ActionEvent e) {
+        resetBoard();
+    }
+
+    private void forwardButtonActionPerformed(ActionEvent e) {
+        // TODO add your code here
+    }
+
 
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
@@ -448,7 +512,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
         helpMenu = new JMenu();
         helpMenuItem = new JMenuItem();
         aboutMenuItem = new JMenuItem();
-        panel1 = new JPanel();
+        mainPanel = new JPanel();
         movesScrollPane = new JScrollPane();
         movesTextArea = new JTextArea();
         panel2 = new JPanel();
@@ -456,6 +520,8 @@ public class AppFrame extends JFrame implements InvocationHandler {
         backButton = new JButton();
         forwardButton = new JButton();
         fastForwardButton = new JButton();
+        showPieces = new JButton();
+        resetButton = new JButton();
 
         //======== this ========
         setResizable(false);
@@ -543,10 +609,10 @@ public class AppFrame extends JFrame implements InvocationHandler {
         }
         setJMenuBar(menuBar1);
 
-        //======== panel1 ========
+        //======== mainPanel ========
         {
-            panel1.setMinimumSize(new Dimension(337, 50));
-            panel1.setLayout(new BorderLayout());
+            mainPanel.setMinimumSize(new Dimension(337, 50));
+            mainPanel.setLayout(new BorderLayout());
 
             //======== movesScrollPane ========
             {
@@ -561,7 +627,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
                 movesTextArea.setFont(new Font("Monospaced", Font.PLAIN, 18));
                 movesScrollPane.setViewportView(movesTextArea);
             }
-            panel1.add(movesScrollPane, BorderLayout.CENTER);
+            mainPanel.add(movesScrollPane, BorderLayout.CENTER);
 
             //======== panel2 ========
             {
@@ -577,16 +643,39 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
                 //---- forwardButton ----
                 forwardButton.setText(">");
+                forwardButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        forwardButtonActionPerformed(e);
+                    }
+                });
                 panel2.add(forwardButton);
 
                 //---- fastForwardButton ----
                 fastForwardButton.setMinimumSize(new Dimension(78, 78));
                 fastForwardButton.setText(">>");
                 panel2.add(fastForwardButton);
+
+                //---- showPieces ----
+                showPieces.setText("Show");
+                showPieces.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        showPiecesActionPerformed(e);
+                    }
+                });
+                panel2.add(showPieces);
+
+                //---- resetButton ----
+                resetButton.setText("Reset");
+                resetButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        resetButtonActionPerformed(e);
+                    }
+                });
+                panel2.add(resetButton);
             }
-            panel1.add(panel2, BorderLayout.SOUTH);
+            mainPanel.add(panel2, BorderLayout.SOUTH);
         }
-        contentPane.add(panel1, BorderLayout.SOUTH);
+        contentPane.add(mainPanel, BorderLayout.CENTER);
         pack();
         setLocationRelativeTo(getOwner());
         // JFormDesigner - End of component initialization  //GEN-END:initComponents
@@ -603,13 +692,15 @@ public class AppFrame extends JFrame implements InvocationHandler {
     private JMenu helpMenu;
     private JMenuItem helpMenuItem;
     private JMenuItem aboutMenuItem;
-    private JPanel panel1;
+    private JPanel mainPanel;
     private JScrollPane movesScrollPane;
-    private JTextArea movesTextArea;
+    protected JTextArea movesTextArea;
     private JPanel panel2;
     private JButton fastBackButton;
     private JButton backButton;
     private JButton forwardButton;
     private JButton fastForwardButton;
+    private JButton showPieces;
+    private JButton resetButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 }

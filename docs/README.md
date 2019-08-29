@@ -1,11 +1,24 @@
 Contains any reference material used for the project. This includes anything related to ChessLR game or electronics of the board itself. 
 
+# Wiring Notes #
+
+Long headers are good to have something plugin at top, and do a bunch of wire wrapping on the bottom.
+
+Each row from chess board will have 1 blue wire, the rest grey, to show direction it should face. Perhaps a blue wire for the first reed and a blue for the first LED.
+
 # Running remotely
 
 lee@titan: $ ssh pi@botfly
 pi@fireant:~ $ cd chesslr
 pi@fireant:~/chesslr $ export DISPLAY=:0
 pi@fireant:~/chesslr $ java -cp chesslr-A.1-jar-with-dependencies.jar com.axorion.chesslr.ChessLR
+
+# USB-C
+USB-C Breakout board <https://www.adafruit.com/product/4090>
+USB Micro B <https://www.adafruit.com/product/1833>
+
+USB-C <http://ww1.microchip.com/downloads/en/appnotes/00001953a.pdf>
+https://electronics.stackexchange.com/questions/323128/wiring-diagram-for-usb-c-to-usb-a-cable
 
 # MCP23017
 
@@ -30,8 +43,30 @@ GPB7 <--> |8    3   21| <--> GPA0
           +-----------+
 ```
 
+# Misc
+Restart X windows:
+
+    sudo systemctl restart display-manager
+    
+Autorun script when X starts:
+
+Putting following in `$HOME/.config/autostart/.desktop` and set `chmod +x`:
+
+    [Desktop Entry]
+    Type=Application
+    Exec="/home/pi/bin/rot.sh"
+    Hidden=false
+    NoDisplay=false
+    X-GNOME-Autostart-enabled=true
+    Name=Startup Script 
+
 # Power consumption
 Display pulls between 450 and 470mA.
+Typically, the model B uses between 700-1000mA
+PI Hardware details <https://www.raspberrypi.org/documentation/hardware/raspberrypi/README.md>
+
+# Display off
+xset dpms force off
 
 # Display rotation
 Normal rotation is power cord at the bottom when it is plugged into the display board.
@@ -92,13 +127,13 @@ display_lcd_rotate=x, where x can be one of the folllowing:
     0x10000	horizontal flip
     0x20000	vertical flip
 
-display_rotate=0 Normal
-display_rotate=1 90 degrees (power at right)
-display_rotate=2 180 degrees
-NOTE: You can rotate both the image and touch interface 180º by entering lcd_rotate=2 instead
-display_rotate=3 270 degrees
-display_rotate=0x10000 horizontal flip
-display_rotate=0x20000 vertical flip
+    display_rotate=0 Normal
+    display_rotate=1 90 degrees (power at right)
+    display_rotate=2 180 degrees
+    NOTE: You can rotate both the image and touch interface 180º by entering lcd_rotate=2 instead
+    display_rotate=3 270 degrees
+    display_rotate=0x10000 horizontal flip
+    display_rotate=0x20000 vertical flip
 
 
 ## Older version of Raspbian (fireant)

@@ -22,7 +22,6 @@ import com.axorion.chesslr.hardware.ChessLEDController;
 import com.axorion.chesslr.hardware.ChessReedController;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
@@ -47,12 +46,12 @@ public class ThreeByThree {
         reedController = new ChessReedController(gpio,I2CBus.BUS_1);
         reedController.addListener(new GpioPinListenerDigital() {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                boolean state = event.getState() == PinState.HIGH ? false:true;
                 int ledIndex = reedController.findPinIndex(event.getPin().getPin());
-                ledController.led(ledIndex,state);
+                boolean pieceDown = reedController.stateIsDown(event.getState());
+                ledController.led(ledIndex,pieceDown);
 
-                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
-//                if(state) {
+//                System.out.println("application gpio pin pieceDown change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
+//                if(pieceDown) {
 //                    display.clear();
 //                    showBoard();
 //                    final int x=9;

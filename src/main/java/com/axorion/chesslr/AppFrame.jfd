@@ -9,7 +9,7 @@ new FormModel {
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentMoved", "windowMoved", true ) )
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentResized", "windowResized", true ) )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
-				name: "panel1"
+				name: "mainPanel"
 				"minimumSize": new java.awt.Dimension( 337, 50 )
 				add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
 					name: "movesScrollPane"
@@ -22,6 +22,9 @@ new FormModel {
 						"editable": false
 						"lineWrap": true
 						"font": new java.awt.Font( "Monospaced", 0, 18 )
+						auxiliary() {
+							"JavaCodeGenerator.variableModifiers": 4
+						}
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "Center"
@@ -39,17 +42,28 @@ new FormModel {
 					add( new FormComponent( "javax.swing.JButton" ) {
 						name: "forwardButton"
 						"text": ">"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "forwardButtonActionPerformed", true ) )
 					} )
 					add( new FormComponent( "javax.swing.JButton" ) {
 						name: "fastForwardButton"
 						"minimumSize": new java.awt.Dimension( 78, 78 )
 						"text": ">>"
 					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "showPieces"
+						"text": "Show"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "showPiecesActionPerformed", true ) )
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "resetButton"
+						"text": "Reset"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "resetButtonActionPerformed", true ) )
+					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "South"
 				} )
 			}, new FormLayoutConstraints( class java.lang.String ) {
-				"value": "South"
+				"value": "Center"
 			} )
 			menuBar: new FormContainer( "javax.swing.JMenuBar", new FormLayoutManager( class javax.swing.JMenuBar ) ) {
 				name: "menuBar1"
@@ -94,7 +108,7 @@ new FormModel {
 			}
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 0 )
-			"size": new java.awt.Dimension( 400, 300 )
+			"size": new java.awt.Dimension( 500, 300 )
 		} )
 	}
 }
