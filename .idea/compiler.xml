@@ -11,7 +11,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="ChessBoard" target="1.5" />
-      <module name="chesslr" target="1.5" />
+      <module name="chesslr" target="8" />
       <module name="pi-oled" target="1.5" />
     </bytecodeTargetLevel>
   </component>

@@ -34,6 +34,9 @@ import java.util.ArrayList;
  * Controller takes care of mapping a 3x3 proto board to a full 8x8
  * coords and visa versa.
  *
+ * - LED on and flash means waiting for a piece to be put down.
+ * - LED off and flashing means wait for piece to be removed.
+ *
  * <pre>
  *    a  b  c  d  e  f  g  h
  * 8  00 01 02 03 04 05 06 07  8
@@ -52,6 +55,8 @@ public class BoardController {
     InputController reedController;
     ArrayList<PieceListener> pieceListeners = new ArrayList<PieceListener>();
 
+    FlashThread flashThread;
+
     public BoardController(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
         ledController = new ChessLEDController(gpio,bus);
         reedController = new ChessReedController(gpio,bus);
@@ -67,6 +72,16 @@ public class BoardController {
                 }
             }
         });
+        flashThread = new FlashThread(ledController);
+        flashThread.start();
+    }
+
+    public void flashOn(int ledIndex) {
+        flashThread.addLed(mapToPin(ledIndex));
+    }
+
+    public void flashOff(int ledIndex) {
+        flashThread.removeLed(mapToPin(ledIndex));
     }
 
     public InputController getInputController() {
@@ -153,7 +168,28 @@ public class BoardController {
     }
 
     public void resetBoard() {
-
+        for(int i=0; i<64; i++) {
+            led(i,false);
+        }
+        flashThread.reset();
     }
 
+    public void blink(final int count, final long delay, final int boardIndex) {
+        new Thread(() -> {
+                try {
+                    if(isLEDOn(boardIndex)) {
+                        led(boardIndex,false);
+                        Thread.sleep(delay);
+                    }
+                    for(int i = 0; i < count; i++) {
+                        led(boardIndex,true);
+                        Thread.sleep(delay);
+                        led(boardIndex,false);
+                        Thread.sleep(delay);
+                    }
+                } catch(InterruptedException e) {
+                    led(boardIndex,false);
+                }
+            }).start();
+    }
 }

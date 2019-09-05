@@ -32,6 +32,8 @@ public class BoardPanel extends JPanel {
     int squareWidth=60;     //80
     int squareHeight=60;
 
+    int[] squareStatus = new int[64];
+
     public BoardPanel(AppFrame parent) {
         this.parent = parent;
         Image pieceStrip = parent.loadImage("alpha_black.png");
@@ -45,6 +47,10 @@ public class BoardPanel extends JPanel {
         setPreferredSize(new Dimension(squareWidth*8,squareHeight*8));
     }
 
+    public void setSquareStatus(int boardIndex,int status) {
+        squareStatus[boardIndex] = status;
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D)g;
@@ -52,6 +58,12 @@ public class BoardPanel extends JPanel {
         drawPieces(g2);
     }
 
+    public void resetBoard() {
+        for(int i=0; i<squareStatus.length; i++) {
+            squareStatus[i] = 0;
+        }
+        repaint();
+    }
     public void renderBoard(Graphics2D g2,int xoffset,int yoffset,int size) {
         int shadeWhite = 200;
         int shadeBlack = 100;
@@ -66,8 +78,13 @@ public class BoardPanel extends JPanel {
             }
 
             for(int x=0; x<8; x++) {
-                g2.setColor(currentColor);
-                g2.fillRect(xoffset + x*size,yoffset + y*size,size,size);
+                final int index = y*8+x;
+                if(squareStatus[index] == 0) {
+                    g2.setColor(currentColor);
+                } else if(squareStatus[index] == 1) {
+                    g2.setColor(Color.red);
+                }
+                g2.fillRect(xoffset+x*size,yoffset+y*size,size,size);
                 if(currentColor == whiteColor) {
                     currentColor = blackColor;
                 } else {

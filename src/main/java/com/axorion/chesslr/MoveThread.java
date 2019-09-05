@@ -21,8 +21,10 @@
 package com.axorion.chesslr;
 
 /**
- * Thread waits a period of time for the pieces to sit still, then checks if a move has been completed.
- * By waiting for a time, it allows the user to slide pieces over other squares and come to a stop.
+ * Thread waits a period of time for the pieces to sit still *after* a complete move,
+ * then checks if a move has been completed.
+ * By waiting for a time, it allows the user to slide pieces over other squares before
+ * coming to a stop.
  */
 public class MoveThread extends Thread {
     AppFrame parent;
@@ -39,6 +41,7 @@ public class MoveThread extends Thread {
         running = true;
         while(running) {
             try {
+                //first wait for a time ...
                 Thread.sleep(750);
 
                 synchronized(lock) {
@@ -48,6 +51,9 @@ public class MoveThread extends Thread {
                         continue;
                     }
 
+                    //...then check if what is on the board is the same.
+                    // If so, player completed move.
+                    // If not, player is still sliding his piece.
                     if(running && up != -1 && down != -1) {
                         //check if player has moved since we got both up and down events
                         if(up == parent.pieceUpIndex && down == parent.pieceDownIndex) {
