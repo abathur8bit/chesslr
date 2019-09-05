@@ -55,8 +55,8 @@ public class MoveThread extends Thread {
                                 String playersMove = parent.chessBoard.indexToBoard(up)+parent.chessBoard.indexToBoard(down);
                                 parent.recordMove(playersMove);
                             }
-                            parent.ledController.led(parent.mapToPin(up),false);
-                            parent.ledController.led(parent.mapToPin(down),false);
+                            parent.chessBoardController.led(up,false);
+                            parent.chessBoardController.led(down,false);
                             parent.pieceUpIndex = -1;
                             parent.pieceDownIndex = -1;
                             up = -1;

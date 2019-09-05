@@ -19,18 +19,12 @@
 package com.axorion.chesslr;
 
 import com.axorion.chess.ChessBoard;
-import com.axorion.chesslr.hardware.ChessLEDController;
-import com.axorion.chesslr.hardware.ChessReedController;
-import com.axorion.chesslr.hardware.InputController;
-import com.axorion.chesslr.hardware.LEDController;
+import com.axorion.chesslr.hardware.BoardController;
+import com.axorion.chesslr.hardware.PieceListener;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.Pin;
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
-import oled.OLEDDisplay;
 
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
@@ -53,14 +47,15 @@ import java.net.URL;
 
 import static java.awt.Image.SCALE_SMOOTH;
 
+//import oled.OLEDDisplay;
+
 /**
  * @author Lee Patterson
  */
-public class AppFrame extends JFrame implements InvocationHandler {
+public class AppFrame extends JFrame implements InvocationHandler,PieceListener {
     GpioController gpio;
-    LEDController ledController;
-    InputController reedController;
-    OLEDDisplay display;
+    BoardController chessBoardController;
+//    OLEDDisplay display;
 
     String whitePieceLetters = "PNBRQK";
     String blackPieceLetters = "pnbrqk";
@@ -93,6 +88,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
     boolean boardAttached;
     String waitForPieceUp = null;
     String waitForPieceDown = null;
+    String waitForMove = null;
 
     public AppFrame(String title,boolean boardAttached) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
@@ -164,13 +160,15 @@ public class AppFrame extends JFrame implements InvocationHandler {
     }
 
     /** Start waiting for a specific move to be made. */
-    private void waitForMove(String move) {
+    private void setWaitForMove(String move) {
         clearTakeback();
+
+        waitForMove = move;
 
         String from = chessBoard.from(move);
         String to = chessBoard.to(move);
-        ledController.led(mapToPin(chessBoard.boardToIndex(from)),true);
-        ledController.led(mapToPin(chessBoard.boardToIndex(to)),true);
+        chessBoardController.led(chessBoard.boardToIndex(from),true);
+        chessBoardController.led(chessBoard.boardToIndex(to),true);
 
         waitForPieceUp = from;
         waitForPieceDown = to;
@@ -179,11 +177,11 @@ public class AppFrame extends JFrame implements InvocationHandler {
     /** If there is an existing move beign taken back, turn off LED's for that move. */
     private void clearTakeback() {
         if(waitForPieceUp != null) {
-            ledController.led(mapToPin(chessBoard.boardToIndex(waitForPieceUp)),false);
+            chessBoardController.led(chessBoard.boardToIndex(waitForPieceUp),false);
             waitForPieceUp = null;
         }
         if(waitForPieceDown != null) {
-            ledController.led(mapToPin(chessBoard.boardToIndex(waitForPieceDown)),false);
+            chessBoardController.led(chessBoard.boardToIndex(waitForPieceDown),false);
             waitForPieceDown = null;
         }
     }
@@ -205,25 +203,8 @@ public class AppFrame extends JFrame implements InvocationHandler {
     private void initHardware() throws IOException, I2CFactory.UnsupportedBusNumberException {
         final int bus = I2CBus.BUS_1;
 
-        ledController = new ChessLEDController(gpio,bus);
-
-        reedController = new ChessReedController(gpio,bus);
-        reedController.addListener(new GpioPinListenerDigital() {
-            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                //TODO If there is a piece up and we got a down, then we moved the up location to down location
-                //TODO If there was a down, but no up, then wait for an up, and move that up to the down location.
-
-                final Pin pin = event.getPin().getPin();
-                final int index = reedController.findPinIndex(pin);
-//                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " index = "+index);
-
-                if(reedController.stateIsDown(event.getState())) {
-                    pieceDown(index);
-                } else {
-                    pieceUp(index);
-                }
-            }
-        });
+        chessBoardController = new BoardController(gpio,bus);
+        chessBoardController.addListener(this);
     }
 
     public String getFilename() {
@@ -259,26 +240,26 @@ public class AppFrame extends JFrame implements InvocationHandler {
         out.close();
     }
 
-    public void drawRect(OLEDDisplay display,int xpos,int ypos,int width,int height,boolean on) {
-        int y=ypos;
-        int x=xpos;
-        for(x=xpos; x<xpos+width-1; ++x) {
-            display.setPixel(x,y,on);
-        }
-        y=ypos+height-1;
-        for(x=xpos; x<xpos+width-1; ++x) {
-            display.setPixel(x,y,on);
-        }
-
-        x=xpos;
-        for(y=ypos; y<ypos+height-1; ++y) {
-            display.setPixel(x,y,on);
-        }
-        x=xpos+width-1;
-        for(y=ypos; y<ypos+height-1; ++y) {
-            display.setPixel(x,y,on);
-        }
-    }
+//    public void drawRect(OLEDDisplay display,int xpos,int ypos,int width,int height,boolean on) {
+//        int y=ypos;
+//        int x=xpos;
+//        for(x=xpos; x<xpos+width-1; ++x) {
+//            display.setPixel(x,y,on);
+//        }
+//        y=ypos+height-1;
+//        for(x=xpos; x<xpos+width-1; ++x) {
+//            display.setPixel(x,y,on);
+//        }
+//
+//        x=xpos;
+//        for(y=ypos; y<ypos+height-1; ++y) {
+//            display.setPixel(x,y,on);
+//        }
+//        x=xpos+width-1;
+//        for(y=ypos; y<ypos+height-1; ++y) {
+//            display.setPixel(x,y,on);
+//        }
+//    }
 
     public void startApp() throws IOException {
         resetBoard();
@@ -289,21 +270,21 @@ public class AppFrame extends JFrame implements InvocationHandler {
     /**
      * Piece was lifted off the board.
      *
-     * @param index location piece was picked up from.
+     * @param boardIndex location piece was picked up from.
      */
-    public void pieceUp(int index) {
+    public void pieceUp(int boardIndex) {
         if(isShowingPieces) {
             showPieces(true);
         } else {
             if(waitForPieceUp != null) {
-                ledController.led(index,false);
+                chessBoardController.led(boardIndex,false);
                 waitForPieceUp = null;
             } else {
                 if(pieceUpIndex == -1 && waitForPieceDown == null) {
                     //only process the first lift, as others are the piece moving around
                     //also if we are waiting for a piece down, we can't start a new move
-                    pieceUpIndex = mapToBoard(index);
-                    ledController.led(mapToPin(pieceUpIndex),true);
+                    pieceUpIndex = boardIndex;
+                    chessBoardController.led(pieceUpIndex,true);
                     processMove();
                 }
             }
@@ -311,25 +292,25 @@ public class AppFrame extends JFrame implements InvocationHandler {
     }
 
     /**
-     * Piece was put back onto the board at the given index.
+     * Piece was put back onto the board at the given boardIndex.
      *
-     * @param index location piece was dropped.
+     * @param boardIndex location piece was dropped.
      */
-    public void pieceDown(int index) {
+    public void pieceDown(int boardIndex) {
         enableButtons();
         if(isShowingPieces) {
             showPieces(true);
         } else {
             if(waitForPieceDown != null) {
-                ledController.led(index,false);
+                chessBoardController.led(boardIndex,false);
                 waitForPieceDown = null;
 
             } else {
                 if(pieceDownIndex != -1) {
-                    ledController.led(mapToPin(pieceDownIndex),false);    //turn off previous led
+                    chessBoardController.led(pieceDownIndex,false);    //turn off previous led
                 }
-                pieceDownIndex = mapToBoard(index);
-                ledController.led(mapToPin(pieceDownIndex),true);
+                pieceDownIndex = boardIndex;
+                chessBoardController.led(pieceDownIndex,true);
                 processMove();
             }
         }
@@ -366,64 +347,30 @@ public class AppFrame extends JFrame implements InvocationHandler {
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    if(ledController.isOn(ledIndex)) {
-                        ledController.led(ledIndex,false);
+                    if(chessBoardController.isOn(ledIndex)) {
+                        chessBoardController.led(ledIndex,false);
                         Thread.sleep(delay);
                     }
                     for(int i = 0; i < count; i++) {
-                        ledController.led(ledIndex,true);
+                        chessBoardController.led(ledIndex,true);
                         Thread.sleep(delay);
-                        ledController.led(ledIndex,false);
+                        chessBoardController.led(ledIndex,false);
                         Thread.sleep(delay);
                     }
                 } catch(InterruptedException e) {
-                    ledController.led(ledIndex,false);
+                    chessBoardController.led(ledIndex,false);
                 }
             }
         }).start();
-    }
-
-    public int mapToBoard(int pinIndex) {
-//        int[] pinToBoardMap = {3,4,5,11,12,13,19,20,21}; //upper middle
-        int[] pinToBoardMap = {0,1,2,8,9,10,16,17,18}; //top left
-//        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42}; //bottom leff
-        return pinToBoardMap[pinIndex];
-    }
-
-    public int mapToPin(int boardIndex) {
-        //upper middle
-//        int[] boardToPinMap = {
-//                0,0,0,0,1,2,0,0,
-//                0,0,0,3,4,5,0,0,
-//                0,0,0,6,7,8,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0
-//        };
-        //top left
-        int[] boardToPinMap = {
-                0,1,2,0,0,0,0,0,
-                3,4,5,0,0,0,0,0,
-                6,7,8,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0
-        };
-        return boardToPinMap[boardIndex];
-
     }
 
     public void startup() throws IOException {
         if(boardAttached) {
             try {
                 for(int i = 0; i < 9; ++i) {
-                    ledController.led(i,true);
+                    chessBoardController.getLedController().led(i,true);
                     Thread.sleep(100);
-                    ledController.led(i,false);
+                    chessBoardController.getLedController().led(i,false);
                 }
             } catch(InterruptedException e) {
                 //do nothing
@@ -433,6 +380,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
     private void resetBoard() {
         showPieces(false);
+        chessBoardController.resetBoard();
         chessBoard.resetBoard();
         pieceUpIndex = -1;
         pieceDownIndex = -1;
@@ -585,11 +533,11 @@ public class AppFrame extends JFrame implements InvocationHandler {
         if(boardAttached) {
             if(isShowingPieces) {
                 for(int i = 0; i < 9; i++) {
-                    ledController.led(i,reedController.isSet(i));
+                    chessBoardController.led(i,chessBoardController.isSet(i));
                 }
             } else {
                 for(int i = 0; i < 9; i++) {
-                    ledController.led(i,false);
+                    chessBoardController.led(i,false);
                 }
             }
         }
@@ -633,7 +581,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    waitForMove(waitMove);
+                    setWaitForMove(waitMove);
                     movesTextArea.setText(chessBoard.getMovesPgn());
                     enableButtons();
                     board.repaint();
@@ -645,7 +593,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
     private void fastForwardButtonActionPerformed(ActionEvent e) {
         final String move = "a7a6";
         recordMove(move);
-        waitForMove(move);
+        setWaitForMove(move);
     }
 
     private void initComponents() {
