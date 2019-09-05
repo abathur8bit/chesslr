@@ -1,5 +1,18 @@
 Contains any reference material used for the project. This includes anything related to ChessLR game or electronics of the board itself. 
 
+# Board
+
+   a  b  c  d  e  f  g  h
+8  00 01 02 03 04 05 06 07  8
+7  08 09 10 11 12 13 14 15  7
+6  16 17 18 19 20 21 22 23  6
+5  24 25 26 27 28 29 30 31  5
+4  32 33 34 35 36 37 38 39  4 
+3  40 41 42 43 44 45 46 47  3 
+2  48 49 50 51 52 53 54 55  2 
+1  56 57 58 59 60 61 62 63  1
+   a  b  c  d  e  f  g  h
+  
 # Wiring Notes #
 
 Long headers are good to have something plugin at top, and do a bunch of wire wrapping on the bottom.

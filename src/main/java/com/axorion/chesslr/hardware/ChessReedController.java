@@ -84,13 +84,15 @@ public class ChessReedController implements GpioPinListenerDigital,InputControll
             MCP23017Pin.GPIO_A0,
             MCP23017Pin.GPIO_A1,
             MCP23017Pin.GPIO_A2,
+
             MCP23017Pin.GPIO_A3,
             MCP23017Pin.GPIO_A4,
             MCP23017Pin.GPIO_A5,
+
             MCP23017Pin.GPIO_A6,
             MCP23017Pin.GPIO_A7,
-
             MCP23017Pin.GPIO_B0,
+
             MCP23017Pin.GPIO_B1,
             MCP23017Pin.GPIO_B2,
             MCP23017Pin.GPIO_B3,
