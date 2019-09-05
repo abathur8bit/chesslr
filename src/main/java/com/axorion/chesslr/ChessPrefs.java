@@ -23,9 +23,12 @@ import java.io.*;
 import java.util.prefs.Preferences;
 
 public class ChessPrefs {
+    static final String GAME_ID = "gameId";
+    static final String WINDOW_POSITION = "window";
     AppFrame parent;
     Preferences prefs;
     boolean selectOutput = true;
+    long gameId = 1000;
     Rectangle bounds;
     File prefsFile; //lazy load in #getPrefsFile
 
@@ -46,11 +49,12 @@ public class ChessPrefs {
             try {
                 InputStream in = new FileInputStream(getPrefsFile());
                 Preferences.importPreferences(in);
-                String position = prefs.get("window",null);
+                String position = prefs.get(WINDOW_POSITION,null);
                 if(position != null) {
                     String[] nums = position.split(",");
                     bounds = new Rectangle(Integer.parseInt(nums[0]),Integer.parseInt(nums[1]),Integer.parseInt(nums[2]),Integer.parseInt(nums[3]));
                 }
+                gameId = prefs.getLong(GAME_ID,gameId);
             } catch(Exception e) {
                 ChessLR.handleError("Unable to load preferences from ["+getPrefsFile().getAbsolutePath()+"]",e);
             }
@@ -61,7 +65,8 @@ public class ChessPrefs {
         try {
             if(parent != null) {
                 String position = String.format("%d,%d,%d,%d",parent.getX(),parent.getY(),parent.getWidth(),parent.getHeight());
-                prefs.put("window",position);
+                prefs.put(WINDOW_POSITION,position);
+                prefs.put(GAME_ID,Long.toString(gameId));
             }
 
             OutputStream os = new FileOutputStream(getPrefsFile());

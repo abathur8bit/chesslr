@@ -19,8 +19,9 @@
 package com.axorion.chess;
 
 import java.security.InvalidParameterException;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Chess board that keeps track of the state, and generates FEN notation. When constructed, you get a new board setup.
@@ -34,6 +35,10 @@ public class ChessBoard
     public static final int WHITE = 'w';
     public static final int BLACK = 'b';
     public static final int EMPTY_SQUARE = ' ';
+
+    static long gameId = 1000;
+    Calendar startDate = GregorianCalendar.getInstance();
+    DateFormat pgnFormatter = new SimpleDateFormat("yyyy.MM.dd");
 
     String blackPieceLetters = "pnbrqk";
     String whitePieceLetters = "PNBRQK";
@@ -68,6 +73,23 @@ public class ChessBoard
 
     public ChessBoard() {
         resetBoard();
+    }
+
+    public void setGameId(long id) {
+        this.gameId = id;
+    }
+
+    public long getGameId() {
+        return gameId;
+    }
+
+    /** Returns the date in PGN format of YYYY.MM.DD, zero padded. ie: 2019.01.31. */
+    public String getGameDateFormatted() {
+        return pgnFormatter.format(startDate.getTime());
+    }
+
+    public void setGameDate(Date d) {
+        startDate.setTime(d);
     }
 
     public boolean canWhiteCastleKingSide() {
@@ -236,6 +258,23 @@ public class ChessBoard
     }
 
     /**
+     * Return the source square in the given 4 char move.
+     * @param move Move like "a2a3".
+     * @return source square like "a2".
+     */
+    public String from(String move) {
+        return move.substring(0,2);
+    }
+
+    /**
+     * Return the destination square in the given 4 char move.
+     * @param move Move like "a2a3".
+     * @return destination square like "a3".
+     */
+    public String to(String move) {
+        return move.substring(2,4);
+    }
+    /**
      * Convert the board coordinate to an index with 0 being the upper left corner.
      * used internally.
      *
@@ -294,6 +333,61 @@ public class ChessBoard
             moves.append(moveCard.get(i));
         }
         return moves.toString();
+    }
+
+    public String getMovesPgn() {
+        ChessBoard board = new ChessBoard();
+        StringBuilder buff = new StringBuilder();
+        StringBuilder temp = new StringBuilder();
+        int moveNumber = 0;
+        for(String move : moveCard) {
+            moveNumber = board.fullMoveCounter+1;
+            int currentMove = board.currentMove;
+            if(currentMove == WHITE) {
+                temp.append(moveNumber+".");
+            } else {
+                temp.append(' ');
+            }
+
+            String from = move.substring(0,2);
+            String to = move.substring(2,4);
+            char pieceFrom = (char)board.pieceAt(from);
+            char pieceTo = (char)board.pieceAt(to);
+            if(pieceFrom>='a') {
+                pieceFrom = (char)(pieceFrom - 'a'+'A');
+            }
+            boolean take = pieceTo != EMPTY_SQUARE;
+            if(pieceFrom == 'P') {
+                if(take) {
+                    temp.append(from.charAt(0)+"x");
+                }
+                temp.append(to);
+            } else {
+                temp.append(pieceFrom);
+                if(take) {
+                    temp.append('x');
+                }
+                temp.append(to);
+            }
+
+            if(currentMove == BLACK) {
+                if(moveNumber > 1) {
+                    buff.append(' ');
+                }
+                buff.append(temp.toString());
+                temp.delete(0,buff.length());
+            }
+
+            board.move(move);
+        }
+        //check if we have a half move
+        if(temp.length()>0)
+            if(moveNumber > 1) {
+                buff.append(' ');
+            }
+            buff.append(temp.toString());
+
+        return buff.toString();
     }
 
     /**
@@ -360,6 +454,32 @@ public class ChessBoard
             return true;
         }
         return false;
+    }
+
+    public String takeback() {
+        if(moveCard.size() == 0)
+            return null;
+        int index = moveCard.size()-1;
+        String move = moveCard.get(index);
+        moveCard.remove(index);
+        replayMoves();
+        return move;
+    }
+
+    /** Replay all moves so board state is restored. */
+    private void replayMoves() {
+        ChessBoard replay = new ChessBoard();
+        for(String move : moveCard) {
+            replay.move(move);
+        }
+        this.gameBoard = replay.gameBoard;
+        this.currentMove = replay.currentMove;
+        this.halfMoveCounter = replay.halfMoveCounter;
+        this.fullMoveCounter = replay.fullMoveCounter;
+        this.castleWhiteKingSide = replay.castleWhiteKingSide;
+        this.castleWhiteQueenSide = replay.castleWhiteQueenSide;
+        this.castleBlackKingSide = replay.castleBlackKingSide;
+        this.castleBlackQueenSide = replay.castleBlackQueenSide;
     }
 
     /**

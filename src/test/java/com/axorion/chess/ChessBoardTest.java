@@ -20,6 +20,8 @@ package com.axorion.chess;
 
 import junit.framework.TestCase;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -36,6 +38,94 @@ public class ChessBoardTest extends TestCase
                 "        "+
                 "PPPPPPPP"+
                 "RNBQKBNR";
+
+    public void testPgnHalfMove() {
+        ChessBoard board = new ChessBoard();
+        board.move("d2d4");
+        String result = board.getMovesPgn();
+        assertEquals("1.d4",result);
+    }
+
+    public void testPgnFullMove() {
+        ChessBoard board = new ChessBoard();
+        board.move("d2d4");
+        board.move("e7e5");
+        String result = board.getMovesPgn();
+        assertEquals("1.d4 e5",result);
+    }
+
+    public void testPgnPawnCaptures() {
+        ChessBoard board = new ChessBoard();
+        board.move("d2d4");
+        board.move("e7e5");
+        board.move("d4e5");
+        String result = board.getMovesPgn();
+        assertEquals("1.d4 e5 2.dxe5",result);
+    }
+
+    public void testPgnQueenCaptures() {
+        ChessBoard board = new ChessBoard();
+        board.move("d2d4");
+        board.move("e7e5");
+        board.move("d4e5");
+        board.move("f8d6");
+        board.move("d1d6");
+        String result = board.getMovesPgn();
+        assertEquals("1.d4 e5 2.dxe5 Bd6 3.Qxd6",result);
+    }
+
+    public void testFromTo() {
+        ChessBoard board = new ChessBoard();
+        String from = "a2";
+        String to = "a3";
+        String move = from+to;
+        assertEquals(from,board.from(move));
+        assertEquals(to,board.to(move));
+    }
+
+    public void testTakeback() {
+        ChessBoard board = new ChessBoard();
+        assertEquals('p',board.pieceAt("a7"));
+        board.move("a2a3");
+        board.move("a7a6");
+        String result = board.takeback();
+        assertEquals("a7a6",result);
+        assertEquals('p',board.pieceAt("a7"));
+    }
+
+    public void testTakebackPgn() {
+        ChessBoard board = new ChessBoard();
+        board.move("d2d4");
+        board.move("e7e5");
+        board.move("d4e5");
+        board.move("f8d6");
+        board.move("d1d6");
+        assertEquals("1.d4 e5 2.dxe5 Bd6 3.Qxd6",board.getMovesPgn());
+        assertEquals("d1d6",board.takeback());
+        assertEquals("1.d4 e5 2.dxe5 Bd6",board.getMovesPgn());
+    }
+
+    public void testTakebackPgnHalfMove() {
+        ChessBoard board = new ChessBoard();
+        board.move("d2d4");
+        board.move("e7e5");
+        board.move("d4e5");
+        board.move("f8d6");
+        board.move("d1d6");
+        board.move("c7d6");
+        assertEquals("1.d4 e5 2.dxe5 Bd6 3.Qxd6 cxd6",board.getMovesPgn());
+        assertEquals("c7d6",board.takeback());
+        assertEquals("1.d4 e5 2.dxe5 Bd6 3.Qxd6",board.getMovesPgn());
+    }
+
+    public void testDateFormatted() {
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.set(2019,Calendar.JANUARY,01,0,0,0);
+        ChessBoard board = new ChessBoard();
+        board.setGameDate(cal.getTime());
+        String result = board.getGameDateFormatted();
+        assertEquals("2019.01.01",board.getGameDateFormatted());
+    }
 
     public void testIndexToBoard() {
         ChessBoard board = new ChessBoard();

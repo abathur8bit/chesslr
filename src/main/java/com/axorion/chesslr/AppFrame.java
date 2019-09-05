@@ -43,7 +43,9 @@ import java.awt.image.BufferedImage;
 import java.awt.image.CropImageFilter;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageProducer;
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -84,16 +86,20 @@ public class AppFrame extends JFrame implements InvocationHandler {
             Color.magenta,
             Color.orange,
     };
+    Color buttonBackgroundColor = null;
     int colorIndex=0;
     boolean isShowingPieces = false;
     MoveThread moveThread = new MoveThread(this);
     boolean boardAttached;
+    String waitForPieceUp = null;
+    String waitForPieceDown = null;
 
     public AppFrame(String title,boolean boardAttached) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
         this.boardAttached = boardAttached;
         prefs = new ChessPrefs(this);
         prefs.loadPrefs();
+        chessBoard.setGameId(prefs.gameId);
 
         mediaTracker = new MediaTracker(this);
         String lcOSName = System.getProperty("os.name").toLowerCase();
@@ -157,6 +163,30 @@ public class AppFrame extends JFrame implements InvocationHandler {
         }
     }
 
+    /** Start waiting for a specific move to be made. */
+    private void waitForMove(String move) {
+        clearTakeback();
+
+        String from = chessBoard.from(move);
+        String to = chessBoard.to(move);
+        ledController.led(mapToPin(chessBoard.boardToIndex(from)),true);
+        ledController.led(mapToPin(chessBoard.boardToIndex(to)),true);
+
+        waitForPieceUp = from;
+        waitForPieceDown = to;
+    }
+
+    /** If there is an existing move beign taken back, turn off LED's for that move. */
+    private void clearTakeback() {
+        if(waitForPieceUp != null) {
+            ledController.led(mapToPin(chessBoard.boardToIndex(waitForPieceUp)),false);
+            waitForPieceUp = null;
+        }
+        if(waitForPieceDown != null) {
+            ledController.led(mapToPin(chessBoard.boardToIndex(waitForPieceDown)),false);
+            waitForPieceDown = null;
+        }
+    }
     /** Any text that is added to the moves text area will automatically scroll into view. */
     private void movesAutoScroll() {
         DefaultCaret caret = (DefaultCaret) movesTextArea.getCaret();
@@ -174,9 +204,6 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
     private void initHardware() throws IOException, I2CFactory.UnsupportedBusNumberException {
         final int bus = I2CBus.BUS_1;
-
-//        final int baseAddress = 0x21;
-//        MCP23017GpioProvider provider = new MCP23017GpioProvider(bus,baseAddress);
 
         ledController = new ChessLEDController(gpio,bus);
 
@@ -197,12 +224,39 @@ public class AppFrame extends JFrame implements InvocationHandler {
                 }
             }
         });
-//        display = new OLEDDisplay(I2CBus.BUS_1,0x3D);
-//        display.clear();
-//        drawRect(display,0,0,display.getWidth(),display.getHeight(),true);
-//        display.drawStringCentered("ChessLR",oled.Font.FONT_5X8,display.getHeight()/2-4,true);
-//        display.update();
+    }
 
+    public String getFilename() {
+        return String.format(String.format("games/ChessLR-%05d.txt",chessBoard.getGameId()));
+    }
+    public String getPgnFilename() {
+        return String.format(String.format("games/ChessLR-%05d.pgn",chessBoard.getGameId()));
+    }
+    public void saveGame() throws IOException {
+        File f = new File(getFilename());
+        PrintWriter out = new PrintWriter(f);
+        out.println("ChessLR Game Id: "+chessBoard.getGameId());
+        out.println("Date "+chessBoard.getGameDateFormatted());
+        out.println("");
+        out.println(chessBoard.getMoveString());
+        out.flush();
+        out.close();
+    }
+
+    public void savePgn() throws IOException {
+        File f = new File(getPgnFilename());
+        PrintWriter out = new PrintWriter(f);
+        out.println("[Event \"Game ID "+chessBoard.getGameId()+"\"]");
+        out.println("[Site \"?\"]");
+        out.println("[Date \""+chessBoard.getGameDateFormatted()+"\"]");
+        out.println("[Round \"?\"]");
+        out.println("[White \"?\"]");
+        out.println("[Black \"?\"]");
+        out.println("[Result \"*\"]");
+        out.println("");
+        out.println(chessBoard.getMovesPgn());
+        out.flush();
+        out.close();
     }
 
     public void drawRect(OLEDDisplay display,int xpos,int ypos,int width,int height,boolean on) {
@@ -241,11 +295,17 @@ public class AppFrame extends JFrame implements InvocationHandler {
         if(isShowingPieces) {
             showPieces(true);
         } else {
-            if(pieceUpIndex == -1) {
-                //only process the first lift, as others are the piece moving around
-                pieceUpIndex = mapToBoard(index);
-                ledController.led(mapToPin(pieceUpIndex),true);
-                processMove();
+            if(waitForPieceUp != null) {
+                ledController.led(index,false);
+                waitForPieceUp = null;
+            } else {
+                if(pieceUpIndex == -1 && waitForPieceDown == null) {
+                    //only process the first lift, as others are the piece moving around
+                    //also if we are waiting for a piece down, we can't start a new move
+                    pieceUpIndex = mapToBoard(index);
+                    ledController.led(mapToPin(pieceUpIndex),true);
+                    processMove();
+                }
             }
         }
     }
@@ -256,15 +316,22 @@ public class AppFrame extends JFrame implements InvocationHandler {
      * @param index location piece was dropped.
      */
     public void pieceDown(int index) {
+        enableButtons();
         if(isShowingPieces) {
             showPieces(true);
         } else {
-            if(pieceDownIndex != -1) {
-                ledController.led(mapToPin(pieceDownIndex),false);    //turn off previous led
+            if(waitForPieceDown != null) {
+                ledController.led(index,false);
+                waitForPieceDown = null;
+
+            } else {
+                if(pieceDownIndex != -1) {
+                    ledController.led(mapToPin(pieceDownIndex),false);    //turn off previous led
+                }
+                pieceDownIndex = mapToBoard(index);
+                ledController.led(mapToPin(pieceDownIndex),true);
+                processMove();
             }
-            pieceDownIndex = mapToBoard(index);
-            ledController.led(mapToPin(pieceDownIndex),true);
-            processMove();
         }
     }
 
@@ -272,6 +339,26 @@ public class AppFrame extends JFrame implements InvocationHandler {
     private void processMove() {
         if(pieceUpIndex != -1 && pieceDownIndex != -1) {
             moveThread.waitForMoveComplete(pieceUpIndex,pieceDownIndex);
+        }
+    }
+
+    public void recordMove(String move) {
+        chessBoard.move(move);
+        movesTextArea.setText(chessBoard.getMovesPgn());
+        board.repaint();
+        enableButtons();
+    }
+
+    public void enableButtons() {
+        forwardButton.setEnabled(false);
+        fastForwardButton.setEnabled(true);
+
+        if(chessBoard.getScoreCard().size() > 0) {
+            backButton.setEnabled(true);
+//            fastBackButton.setEnabled(true);
+        } else {
+            backButton.setEnabled(false);
+            fastBackButton.setEnabled(false);
         }
     }
 
@@ -297,20 +384,34 @@ public class AppFrame extends JFrame implements InvocationHandler {
     }
 
     public int mapToBoard(int pinIndex) {
-        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42};
+//        int[] pinToBoardMap = {3,4,5,11,12,13,19,20,21}; //upper middle
+        int[] pinToBoardMap = {0,1,2,8,9,10,16,17,18}; //top left
+//        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42}; //bottom leff
         return pinToBoardMap[pinIndex];
     }
 
     public int mapToPin(int boardIndex) {
+        //upper middle
+//        int[] boardToPinMap = {
+//                0,0,0,0,1,2,0,0,
+//                0,0,0,3,4,5,0,0,
+//                0,0,0,6,7,8,0,0,
+//                0,0,0,0,0,0,0,0,
+//                0,0,0,0,0,0,0,0,
+//                0,0,0,0,0,0,0,0,
+//                0,0,0,0,0,0,0,0,
+//                0,0,0,0,0,0,0,0
+//        };
+        //top left
         int[] boardToPinMap = {
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                6,7,8,0,0,0,0,0,
+                0,1,2,0,0,0,0,0,
                 3,4,5,0,0,0,0,0,
-                0,1,2,0,0,0,0,0
+                6,7,8,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0,
+                0,0,0,0,0,0,0,0
         };
         return boardToPinMap[boardIndex];
 
@@ -337,6 +438,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
         pieceDownIndex = -1;
         isShowingPieces = false;
         movesTextArea.setText("");
+        enableButtons();
         board.repaint();
     }
 
@@ -469,14 +571,16 @@ public class AppFrame extends JFrame implements InvocationHandler {
     }
 
     private void showPiecesActionPerformed(ActionEvent e) {
-        if(isShowingPieces) {
-            showPieces(false);
-        } else {
-            showPieces(true);
-        }
+
+        showPieces(!isShowingPieces);
+        showPieces.setSelected(false);
+//        showPieces.transferFocus();
+        requestFocus();
     }
 
     private void showPieces(boolean show) {
+        clearTakeback();
+
         isShowingPieces = show;
         if(boardAttached) {
             if(isShowingPieces) {
@@ -489,6 +593,17 @@ public class AppFrame extends JFrame implements InvocationHandler {
                 }
             }
         }
+        if(buttonBackgroundColor == null) {
+            buttonBackgroundColor = showPieces.getBackground();
+        }
+        if(isShowingPieces) {
+            showPieces.setBackground(Color.gray);
+        }
+        else {
+            showPieces.setBackground(buttonBackgroundColor);
+        }
+
+        enableButtons();
     }
 
     private void resetButtonActionPerformed(ActionEvent e) {
@@ -499,12 +614,46 @@ public class AppFrame extends JFrame implements InvocationHandler {
         // TODO add your code here
     }
 
+    private void saveGameMenuItemActionPerformed(ActionEvent event) {
+        try {
+            saveGame();
+            savePgn();
+            JOptionPane.showMessageDialog(this,"Game "+chessBoard.getGameId()+" saved.");
+        } catch(IOException e) {
+            ChessLR.handleError("Unable to save game Id"+chessBoard.getGameId(),e);
+        }
+    }
+
+    private void backButtonActionPerformed(ActionEvent e) {
+        String move = chessBoard.takeback();
+        if(move != null) {
+            String from = chessBoard.from(move);
+            String to = chessBoard.to(move);
+            final String waitMove = to+from;
+
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    waitForMove(waitMove);
+                    movesTextArea.setText(chessBoard.getMovesPgn());
+                    enableButtons();
+                    board.repaint();
+                }
+            });
+        }
+    }
+
+    private void fastForwardButtonActionPerformed(ActionEvent e) {
+        final String move = "a7a6";
+        recordMove(move);
+        waitForMove(move);
+    }
 
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
         // Generated using JFormDesigner non-commercial license
         menuBar1 = new JMenuBar();
         fileMenu = new JMenu();
+        saveGameMenuItem = new JMenuItem();
         newMenuItem = new JMenuItem();
         openMenuItem = new JMenuItem();
         optionsMenuItem = new JMenuItem();
@@ -544,6 +693,15 @@ public class AppFrame extends JFrame implements InvocationHandler {
             //======== fileMenu ========
             {
                 fileMenu.setText("File");
+
+                //---- saveGameMenuItem ----
+                saveGameMenuItem.setText("Save");
+                saveGameMenuItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        saveGameMenuItemActionPerformed(e);
+                    }
+                });
+                fileMenu.add(saveGameMenuItem);
 
                 //---- newMenuItem ----
                 newMenuItem.setText("New");
@@ -639,6 +797,11 @@ public class AppFrame extends JFrame implements InvocationHandler {
 
                 //---- backButton ----
                 backButton.setText("<");
+                backButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        backButtonActionPerformed(e);
+                    }
+                });
                 panel2.add(backButton);
 
                 //---- forwardButton ----
@@ -653,6 +816,11 @@ public class AppFrame extends JFrame implements InvocationHandler {
                 //---- fastForwardButton ----
                 fastForwardButton.setMinimumSize(new Dimension(78, 78));
                 fastForwardButton.setText(">>");
+                fastForwardButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        fastForwardButtonActionPerformed(e);
+                    }
+                });
                 panel2.add(fastForwardButton);
 
                 //---- showPieces ----
@@ -685,6 +853,7 @@ public class AppFrame extends JFrame implements InvocationHandler {
     // Generated using JFormDesigner non-commercial license
     private JMenuBar menuBar1;
     private JMenu fileMenu;
+    private JMenuItem saveGameMenuItem;
     private JMenuItem newMenuItem;
     private JMenuItem openMenuItem;
     private JMenuItem optionsMenuItem;

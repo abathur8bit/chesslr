@@ -38,6 +38,7 @@ new FormModel {
 					add( new FormComponent( "javax.swing.JButton" ) {
 						name: "backButton"
 						"text": "<"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "backButtonActionPerformed", true ) )
 					} )
 					add( new FormComponent( "javax.swing.JButton" ) {
 						name: "forwardButton"
@@ -48,6 +49,7 @@ new FormModel {
 						name: "fastForwardButton"
 						"minimumSize": new java.awt.Dimension( 78, 78 )
 						"text": ">>"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "fastForwardButtonActionPerformed", true ) )
 					} )
 					add( new FormComponent( "javax.swing.JButton" ) {
 						name: "showPieces"
@@ -70,6 +72,11 @@ new FormModel {
 				add( new FormContainer( "javax.swing.JMenu", new FormLayoutManager( class javax.swing.JMenu ) ) {
 					name: "fileMenu"
 					"text": "File"
+					add( new FormComponent( "javax.swing.JMenuItem" ) {
+						name: "saveGameMenuItem"
+						"text": "Save"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "saveGameMenuItemActionPerformed", true ) )
+					} )
 					add( new FormComponent( "javax.swing.JMenuItem" ) {
 						name: "newMenuItem"
 						"text": "New"

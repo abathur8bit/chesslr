@@ -53,9 +53,7 @@ public class MoveThread extends Thread {
                         if(up == parent.pieceUpIndex && down == parent.pieceDownIndex) {
                             if(up != down) {   //make sure we are not dropping the piece on the same square
                                 String playersMove = parent.chessBoard.indexToBoard(up)+parent.chessBoard.indexToBoard(down);
-                                parent.chessBoard.move(playersMove);
-                                parent.movesTextArea.setText(parent.chessBoard.getMoveString());
-                                parent.board.repaint();
+                                parent.recordMove(playersMove);
                             }
                             parent.ledController.led(parent.mapToPin(up),false);
                             parent.ledController.led(parent.mapToPin(down),false);
