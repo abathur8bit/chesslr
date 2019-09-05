@@ -29,7 +29,24 @@ import com.pi4j.io.i2c.I2CFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 
-/** Controls all the chess board hardware. Takes care of mapping a 3x3 proto board to a full 8x8 coords and visa versa. */
+/**
+ * Controls all the chess board hardware. User should assume an 8x8 board.
+ * Controller takes care of mapping a 3x3 proto board to a full 8x8
+ * coords and visa versa.
+ *
+ * <pre>
+ *    a  b  c  d  e  f  g  h
+ * 8  00 01 02 03 04 05 06 07  8
+ * 7  08 09 10 11 12 13 14 15  7
+ * 6  16 17 18 19 20 21 22 23  6
+ * 5  24 25 26 27 28 29 30 31  5
+ * 4  32 33 34 35 36 37 38 39  4
+ * 3  40 41 42 43 44 45 46 47  3
+ * 2  48 49 50 51 52 53 54 55  2
+ * 1  56 57 58 59 60 61 62 63  1
+ *    a  b  c  d  e  f  g  h
+ * </pre>
+ */
 public class BoardController {
     LEDController ledController;
     InputController reedController;
@@ -64,11 +81,19 @@ public class BoardController {
         ledController.led(mapToPin(squareIndex),on);
 
     }
-    public boolean isOn(int boardIndex) {
+
+    /** Return if an LED is on at the specified index. */
+    public boolean isLEDOn(int boardIndex) {
         return ledController.isOn(mapToPin(boardIndex));
     }
 
-    public boolean isSet(int boardIndex) {
+    /**
+     * Return if a piece is down at the specified index.
+     *
+     * @param boardIndex Index to check.
+     * @return true if there is a piece on the square, false otherwise.
+     */
+    public boolean hasPiece(int boardIndex) {
         return reedController.isSet(mapToPin(boardIndex));
     }
 
@@ -76,6 +101,7 @@ public class BoardController {
         pieceListeners.add(listener);
     }
 
+    /** Calls any listeners to tell them about a piece up event. */
     private void pieceUp(int pinIndex) {
         final int boardIndex = mapToBoard(pinIndex);
         for(PieceListener listener : pieceListeners) {
@@ -83,6 +109,7 @@ public class BoardController {
         }
     }
 
+    /** Call any listeners to tell them about a piece down event. */
     private void pieceDown(int pinIndex) {
         final int boardIndex = mapToBoard(pinIndex);
         for(PieceListener listener : pieceListeners) {
@@ -90,14 +117,15 @@ public class BoardController {
         }
     }
 
-    public int mapToBoard(int pinIndex) {
+    private int mapToBoard(int pinIndex) {
 //        int[] pinToBoardMap = {3,4,5,11,12,13,19,20,21}; //upper middle
         int[] pinToBoardMap = {0,1,2,8,9,10,16,17,18}; //top left
 //        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42}; //bottom leff
         return pinToBoardMap[pinIndex];
     }
 
-    public int mapToPin(int boardIndex) {
+    /** Map a board index (0-63) to the correct pin #. */
+    private int mapToPin(int boardIndex) {
         //upper middle
 //        int[] boardToPinMap = {
 //                0,0,0,0,1,2,0,0,

@@ -347,7 +347,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    if(chessBoardController.isOn(ledIndex)) {
+                    if(chessBoardController.isLEDOn(ledIndex)) {
                         chessBoardController.led(ledIndex,false);
                         Thread.sleep(delay);
                     }
@@ -533,7 +533,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         if(boardAttached) {
             if(isShowingPieces) {
                 for(int i = 0; i < 9; i++) {
-                    chessBoardController.led(i,chessBoardController.isSet(i));
+                    chessBoardController.led(i,chessBoardController.hasPiece(i));
                 }
             } else {
                 for(int i = 0; i < 9; i++) {
