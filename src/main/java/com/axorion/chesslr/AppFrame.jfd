@@ -22,6 +22,7 @@ new FormModel {
 						"editable": false
 						"lineWrap": true
 						"font": new java.awt.Font( "Monospaced", 0, 18 )
+						"cursor": new java.awt.Cursor( 2 )
 						auxiliary() {
 							"JavaCodeGenerator.variableModifiers": 4
 						}

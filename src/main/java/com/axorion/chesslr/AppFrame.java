@@ -30,7 +30,6 @@ import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.image.BufferedImage;
@@ -726,47 +725,27 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
                 //---- saveGameMenuItem ----
                 saveGameMenuItem.setText("Save");
-                saveGameMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        saveGameMenuItemActionPerformed(e);
-                    }
-                });
+                saveGameMenuItem.addActionListener(e -> saveGameMenuItemActionPerformed(e));
                 fileMenu.add(saveGameMenuItem);
 
                 //---- newMenuItem ----
                 newMenuItem.setText("New");
-                newMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        newMenuItemActionPerformed(e);
-                    }
-                });
+                newMenuItem.addActionListener(e -> newMenuItemActionPerformed(e));
                 fileMenu.add(newMenuItem);
 
                 //---- openMenuItem ----
                 openMenuItem.setText("Open...");
-                openMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        openMenuItemActionPerformed(e);
-                    }
-                });
+                openMenuItem.addActionListener(e -> openMenuItemActionPerformed(e));
                 fileMenu.add(openMenuItem);
 
                 //---- optionsMenuItem ----
                 optionsMenuItem.setText("Optons...");
-                optionsMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        optionsMenuItemActionPerformed(e);
-                    }
-                });
+                optionsMenuItem.addActionListener(e -> optionsMenuItemActionPerformed(e));
                 fileMenu.add(optionsMenuItem);
 
                 //---- exitMenuItem ----
                 exitMenuItem.setText("Exit");
-                exitMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        exitMenuItemActionPerformed(e);
-                    }
-                });
+                exitMenuItem.addActionListener(e -> exitMenuItemActionPerformed(e));
                 fileMenu.add(exitMenuItem);
             }
             menuBar1.add(fileMenu);
@@ -777,20 +756,12 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
                 //---- helpMenuItem ----
                 helpMenuItem.setText("ChessLR Help");
-                helpMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        helpMenuItemActionPerformed(e);
-                    }
-                });
+                helpMenuItem.addActionListener(e -> helpMenuItemActionPerformed(e));
                 helpMenu.add(helpMenuItem);
 
                 //---- aboutMenuItem ----
                 aboutMenuItem.setText("About...");
-                aboutMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        aboutMenuItemActionPerformed(e);
-                    }
-                });
+                aboutMenuItem.addActionListener(e -> aboutMenuItemActionPerformed(e));
                 helpMenu.add(aboutMenuItem);
             }
             menuBar1.add(helpMenu);
@@ -813,6 +784,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 movesTextArea.setEditable(false);
                 movesTextArea.setLineWrap(true);
                 movesTextArea.setFont(new Font("Monospaced", Font.PLAIN, 18));
+                movesTextArea.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
                 movesScrollPane.setViewportView(movesTextArea);
             }
             mainPanel.add(movesScrollPane, BorderLayout.CENTER);
@@ -827,48 +799,28 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
                 //---- backButton ----
                 backButton.setText("<");
-                backButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        backButtonActionPerformed(e);
-                    }
-                });
+                backButton.addActionListener(e -> backButtonActionPerformed(e));
                 panel2.add(backButton);
 
                 //---- forwardButton ----
                 forwardButton.setText(">");
-                forwardButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        forwardButtonActionPerformed(e);
-                    }
-                });
+                forwardButton.addActionListener(e -> forwardButtonActionPerformed(e));
                 panel2.add(forwardButton);
 
                 //---- fastForwardButton ----
                 fastForwardButton.setMinimumSize(new Dimension(78, 78));
                 fastForwardButton.setText(">>");
-                fastForwardButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        fastForwardButtonActionPerformed(e);
-                    }
-                });
+                fastForwardButton.addActionListener(e -> fastForwardButtonActionPerformed(e));
                 panel2.add(fastForwardButton);
 
                 //---- showPieces ----
                 showPieces.setText("Show");
-                showPieces.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        showPiecesActionPerformed(e);
-                    }
-                });
+                showPieces.addActionListener(e -> showPiecesActionPerformed(e));
                 panel2.add(showPieces);
 
                 //---- resetButton ----
                 resetButton.setText("Reset");
-                resetButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        resetButtonActionPerformed(e);
-                    }
-                });
+                resetButton.addActionListener(e -> resetButtonActionPerformed(e));
                 panel2.add(resetButton);
             }
             mainPanel.add(panel2, BorderLayout.SOUTH);

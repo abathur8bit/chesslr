@@ -134,8 +134,14 @@ public class BoardController {
 
     private int mapToBoard(int pinIndex) {
 //        int[] pinToBoardMap = {3,4,5,11,12,13,19,20,21}; //upper middle
-        int[] pinToBoardMap = {0,1,2,8,9,10,16,17,18}; //top left
+        int[] pinToBoardMap = {
+                0,1,2,
+                8,9,10,
+                16,17,18}; //top left
 //        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42}; //bottom leff
+        if(pinIndex>pinToBoardMap.length) {
+            return 0;
+        }
         return pinToBoardMap[pinIndex];
     }
 

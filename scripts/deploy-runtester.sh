@@ -5,5 +5,5 @@
 
 # Copies the compiled classes to the target machine, then runs the app remotely.
 
-scp -r target/classes pi@botfly:chesslr/target
-scp scripts/runchesslr.sh scripts/runtester.sh pi@botfly:.
+scripts/deploy.sh
+ssh pi@botfly ./runtester.sh

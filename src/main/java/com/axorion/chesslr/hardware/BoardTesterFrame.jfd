@@ -1,0 +1,149 @@
+JFDML JFormDesigner: "6.0.6.4.204" Java: "11.0.3" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+			name: "this"
+			add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+				name: "scrollPane1"
+				add( new FormComponent( "javax.swing.JTextArea" ) {
+					name: "outputTextArea"
+					"preferredSize": new java.awt.Dimension( 1, 150 )
+					"lineWrap": true
+					"wrapStyleWord": true
+				} )
+			}, new FormLayoutConstraints( class java.lang.String ) {
+				"value": "Center"
+			} )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+				name: "lowerPanel"
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {
+					"alignment": 2
+				} ) {
+					name: "buttonPanel"
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "initButton"
+						"text": "Init"
+						"preferredSize": &Dimension0 new java.awt.Dimension( 78, 50 )
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "initButtonActionPerformed", true ) )
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "prevButton"
+						"text": "-"
+						"preferredSize": #Dimension0
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "prevButtonActionPerformed", true ) )
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "nextButton"
+						"text": "+"
+						"preferredSize": #Dimension0
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "nextButtonActionPerformed", true ) )
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "ledButton"
+						"text": "LED 0"
+						"preferredSize": #Dimension0
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ledButtonActionPerformed", true ) )
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "South"
+				} )
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridLayout ) {
+					"hgap": -2
+					"rows": 0
+					"columns": 4
+				} ) {
+					name: "panel3"
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox0"
+						"text": "Button 0"
+					} )
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox1"
+						"text": "Button 1"
+					} )
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox2"
+						"text": "Button 2"
+					} )
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox3"
+						"text": "Button 3"
+					} )
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox4"
+						"text": "Button 4"
+					} )
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox5"
+						"text": "Button 5"
+					} )
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox6"
+						"text": "Button 6"
+					} )
+					add( new FormComponent( "javax.swing.JCheckBox" ) {
+						name: "buttonCheckBox7"
+						"text": "Button 7"
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "Center"
+				} )
+			}, new FormLayoutConstraints( class java.lang.String ) {
+				"value": "South"
+			} )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridLayout ) {
+				"columns": 2
+				"rows": 0
+			} ) {
+				name: "inputPanel"
+				add( new FormComponent( "javax.swing.JLabel" ) {
+					name: "label2"
+					"text": "LED Bank"
+				} )
+				add( new FormComponent( "javax.swing.JTextField" ) {
+					name: "bankTextField"
+					"text": "1"
+				} )
+				add( new FormComponent( "javax.swing.JLabel" ) {
+					name: "label1"
+					"text": "Address"
+				} )
+				add( new FormComponent( "javax.swing.JTextField" ) {
+					name: "addressTextField"
+					"text": "0x20"
+				} )
+				add( new FormComponent( "javax.swing.JLabel" ) {
+					name: "label5"
+					"text": "Num LEDs"
+				} )
+				add( new FormComponent( "javax.swing.JTextField" ) {
+					name: "maxLedTextField"
+					"text": "8"
+				} )
+				add( new FormComponent( "javax.swing.JLabel" ) {
+					name: "label3"
+					"text": "Input Bank"
+				} )
+				add( new FormComponent( "javax.swing.JTextField" ) {
+					name: "inputBankTextField"
+					"text": "0"
+				} )
+				add( new FormComponent( "javax.swing.JLabel" ) {
+					name: "label4"
+					"text": "Input Address"
+				} )
+				add( new FormComponent( "javax.swing.JTextField" ) {
+					name: "inputAddressTextField"
+					"text": "0x20"
+				} )
+			}, new FormLayoutConstraints( class java.lang.String ) {
+				"value": "North"
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 0 )
+			"size": new java.awt.Dimension( 490, 300 )
+		} )
+	}
+}
