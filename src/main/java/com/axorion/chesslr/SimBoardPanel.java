@@ -49,8 +49,10 @@ public class SimBoardPanel extends JPanel {
         int sh = getHeight()/8;
         for(int y=0; y<8; ++y) {
             for(int x = 0; x < 8; ++x) {
-                g2.setColor(boardInterface.isSetLED(x,y) ? Color.YELLOW : Color.ORANGE);
-                g2.fillOval(x*sw+size,y*sh+sh-size-size,size,size);
+                if(boardInterface.isSetLED(x,y)) {
+                    g2.setColor(Color.YELLOW);
+                    g2.fillOval(x*sw+size,y*sh+sh-size-size,size,size);
+                }
             }
         }
     }
