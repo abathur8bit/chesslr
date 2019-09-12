@@ -102,6 +102,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     GameMode previousMode = null;
     boolean pgnNotation = true;
 
+    SimBoard simBoard;
+
     public AppFrame(String title,boolean boardAttached) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
         this.boardAttached = boardAttached;
@@ -169,8 +171,13 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         if(boardAttached) {
             gpio = GpioFactory.getInstance();
             initHardware();
-            moveThread.start();
+            chessBoardController.set3x3Maps();
+        } else {
+            simBoard = new SimBoard(this);
+            chessBoardController = new BoardController(simBoard,simBoard);
+            chessBoardController.addListener(this);
         }
+        moveThread.start();
 
         resetBoard();
     }
@@ -200,14 +207,16 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     /** If there is an existing move beign taken back, turn off LED's for that move. */
     private void clearTakeback() {
         //TODO clear takeback
-//        if(waitForPieceUp != null) {
-//            chessBoardController.led(chessBoard.boardToIndex(waitForPieceUp),false);
-//            waitForPieceUp = null;
-//        }
-//        if(waitForPieceDown != null) {
-//            chessBoardController.led(chessBoard.boardToIndex(waitForPieceDown),false);
-//            waitForPieceDown = null;
-//        }
+        waitForMove = null;
+
+        if(waitForPieceUp != null) {
+            chessBoardController.led(chessBoard.boardToIndex(waitForPieceUp),false);
+            waitForPieceUp = null;
+        }
+        if(waitForPieceDown != null) {
+            chessBoardController.led(chessBoard.boardToIndex(waitForPieceDown),false);
+            waitForPieceDown = null;
+        }
     }
 
     /** Any text that is added to the moves text area will automatically scroll into view. */
@@ -292,6 +301,10 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         resetBoard();
         startup();
         setVisible(true);
+        if(!boardAttached) {
+            simBoard.setLocation(getX()+getWidth(),getY());
+            simBoard.setVisible(true);
+        }
     }
 
     /**
@@ -458,24 +471,22 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     public void startup() {
-        if(boardAttached) {
-            try {
-                for(int i = 0; i < 9; ++i) {
-                    chessBoardController.getLedController().led(i,true);
-                    Thread.sleep(100);
-                    chessBoardController.getLedController().led(i,false);
-                }
-            } catch(InterruptedException e) {
-                //do nothing
+        try {
+            for(int i = 0; i < 9; ++i) {
+                chessBoardController.getLedController().led(i,true);
+                Thread.sleep(100);
+                chessBoardController.getLedController().led(i,false);
             }
+        } catch(InterruptedException e) {
+            //do nothing
         }
     }
 
     private void resetBoard() {
         showPieces(false);
-        if(boardAttached) {
-            chessBoardController.resetBoard();
-        }
+        if(simBoard != null)
+            simBoard.reset();
+        chessBoardController.resetBoard();
         chessBoard.resetBoard();
         board.resetBoard();
         pieceUpIndex = -1;
@@ -629,15 +640,13 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         clearTakeback();
 
         isShowingPieces = show;
-        if(boardAttached) {
-            if(isShowingPieces) {
-                for(int i = 0; i < 64; i++) {
-                    chessBoardController.led(i,chessBoardController.hasPiece(i));
-                }
-            } else {
-                for(int i = 0; i < 64; i++) {
-                    chessBoardController.led(i,false);
-                }
+        if(isShowingPieces) {
+            for(int i = 0; i < 64; i++) {
+                chessBoardController.led(i,chessBoardController.hasPiece(i));
+            }
+        } else {
+            for(int i = 0; i < 64; i++) {
+                chessBoardController.led(i,false);
             }
         }
         if(buttonDefaultColor == null) {

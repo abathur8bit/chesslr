@@ -57,9 +57,58 @@ public class BoardController {
 
     FlashThread flashThread;
 
+    int[] boardToPinMap3x3 = {
+            0,1,2,0,0,0,0,0,
+            3,4,5,0,0,0,0,0,
+            6,7,8,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0,
+            0,0,0,0,0,0,0,0
+    };
+
+    int[] pinToBoardMap3x3 = {
+            0,1,2,
+            8,9,10,
+            16,17,18}; //top left
+
+    int[] boardToPinMap = {
+             0, 1, 2, 3, 4, 5, 6, 7,
+             8, 9,10,11,12,13,14,15,
+            16,17,18,19,20,21,22,23,
+            24,25,26,27,28,29,30,31,
+            32,33,34,35,36,37,38,39,
+            40,41,42,43,44,45,46,47,
+            48,49,50,51,52,53,54,55,
+            56,57,58,59,60,61,62,63
+    };
+    int[] pinToBoardMap = {
+             0, 1, 2, 3, 4, 5, 6, 7,
+             8, 9,10,11,12,13,14,15,
+            16,17,18,19,20,21,22,23,
+            24,25,26,27,28,29,30,31,
+            32,33,34,35,36,37,38,39,
+            40,41,42,43,44,45,46,47,
+            48,49,50,51,52,53,54,55,
+            56,57,58,59,60,61,62,63
+    };;
+
+
+    public BoardController(LEDController led,InputController input) throws IOException, I2CFactory.UnsupportedBusNumberException {
+        this.ledController = led;
+        this.reedController = input;
+        flashThread = new FlashThread(ledController);
+        flashThread.start();
+    }
+
     public BoardController(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
-        ledController = new ChessLEDController(gpio,bus);
-        reedController = new ChessReedController(gpio,bus);
+        if(gpio == null) {
+            // use simulated board
+        } else {
+            ledController = new ChessLEDController(gpio,bus);
+            reedController = new ChessReedController(gpio,bus);
+        }
         reedController.addListener(new GpioPinListenerDigital() {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 final Pin pin = event.getPin().getPin();
@@ -74,6 +123,11 @@ public class BoardController {
         });
         flashThread = new FlashThread(ledController);
         flashThread.start();
+    }
+
+    public void set3x3Maps() {
+        boardToPinMap = boardToPinMap3x3;
+        pinToBoardMap = pinToBoardMap3x3;
     }
 
     public void flashOn(int ledIndex) {
@@ -117,7 +171,7 @@ public class BoardController {
     }
 
     /** Calls any listeners to tell them about a piece up event. */
-    private void pieceUp(int pinIndex) {
+    public void pieceUp(int pinIndex) {
         final int boardIndex = mapToBoard(pinIndex);
         for(PieceListener listener : pieceListeners) {
             listener.pieceUp(boardIndex);
@@ -125,7 +179,7 @@ public class BoardController {
     }
 
     /** Call any listeners to tell them about a piece down event. */
-    private void pieceDown(int pinIndex) {
+    public void pieceDown(int pinIndex) {
         final int boardIndex = mapToBoard(pinIndex);
         for(PieceListener listener : pieceListeners) {
             listener.pieceDown(boardIndex);
@@ -134,10 +188,6 @@ public class BoardController {
 
     private int mapToBoard(int pinIndex) {
 //        int[] pinToBoardMap = {3,4,5,11,12,13,19,20,21}; //upper middle
-        int[] pinToBoardMap = {
-                0,1,2,
-                8,9,10,
-                16,17,18}; //top left
 //        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42}; //bottom leff
         if(pinIndex>pinToBoardMap.length) {
             return 0;
@@ -159,16 +209,6 @@ public class BoardController {
 //                0,0,0,0,0,0,0,0
 //        };
         //top left
-        int[] boardToPinMap = {
-                0,1,2,0,0,0,0,0,
-                3,4,5,0,0,0,0,0,
-                6,7,8,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0,
-                0,0,0,0,0,0,0,0
-        };
         return boardToPinMap[boardIndex];
 
     }
