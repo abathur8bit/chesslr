@@ -68,11 +68,10 @@ public class SimBoardPanel extends JPanel {
         int squareWidth = getWidth()/8;
         int squareHeight = getHeight()/8;
         g2.setColor(Color.BLACK);
-        g2.fillRect(x*squareWidth+squareWidth/2-size/2,y*squareHeight+squareHeight/2-size/2,size,size);
 
         if(on) {
             size /= 2;
-            g2.setColor(Color.LIGHT_GRAY);
+            g2.setColor(Color.RED);
             g2.fillRect(x*squareWidth+squareWidth/2-size/2,y*squareHeight+squareHeight/2-size/2,size,size);
         }
     }
