@@ -57,6 +57,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         WAIT_FOR_PIECE_UP,      //waiting for a specific square to be picked up
         WAIT_FOR_PIECE_DOWN,    //waiting for a specific square to get a piece
         SHOW_PIECES,            //showing all pieces that are detected on the board
+        SHOW_LAYOUT,            //show where pieces should be placed on e-board
     };
 
     GpioController gpio;
@@ -166,6 +167,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         setButtonImage(showPieces,"button-show.png");
         setButtonImage(resetButton,"button-reset.png");
         setButtonImage(notationButton,null);
+        setButtonImage(layoutButton,null);
 
 
         if(boardAttached) {
@@ -449,6 +451,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     public void showLastMove() {
+        board.resetBoard();
         java.util.List<String> scoreCard = chessBoard.getScoreCard();
         if(scoreCard.size()>0) {
             String move = scoreCard.get(scoreCard.size()-1);
@@ -743,6 +746,26 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         repaint();
     }
 
+    private void layoutButtonActionPerformed() {
+        if(mode == GameMode.SHOW_LAYOUT) {
+            layoutButton.setBackground(buttonDefaultColor);
+            layoutButton.setSelected(false);
+            mode = GameMode.PLAYING;
+            for(int i = 0; i < 64; i++) {
+                chessBoardController.led(i,false);
+            }
+            showLastMove();
+        } else {
+            layoutButton.setBackground(buttonDefaultColor);
+            layoutButton.setSelected(false);
+            mode = GameMode.SHOW_LAYOUT;
+            for(int i = 0; i < 64; i++) {
+                boolean on = chessBoard.pieceAt(i) == ChessBoard.EMPTY_SQUARE ? false : true;
+                chessBoardController.led(i,on);
+            }
+        }
+    }
+
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
         // Generated using JFormDesigner non-commercial license
@@ -765,8 +788,10 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         forwardButton = new JButton();
         fastForwardButton = new JButton();
         showPieces = new JButton();
-        resetButton = new JButton();
+        layoutButton = new JButton();
         notationButton = new JButton();
+        hSpacer1 = new JPanel(null);
+        resetButton = new JButton();
 
         //======== this ========
         setResizable(false);
@@ -885,15 +910,21 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 showPieces.addActionListener(e -> showPiecesActionPerformed(e));
                 panel2.add(showPieces);
 
-                //---- resetButton ----
-                resetButton.setText("Reset");
-                resetButton.addActionListener(e -> resetButtonActionPerformed(e));
-                panel2.add(resetButton);
+                //---- layoutButton ----
+                layoutButton.setText("L");
+                layoutButton.addActionListener(e -> layoutButtonActionPerformed());
+                panel2.add(layoutButton);
 
                 //---- notationButton ----
                 notationButton.setText("N");
                 notationButton.addActionListener(e -> notationButtonActionPerformed(e));
                 panel2.add(notationButton);
+                panel2.add(hSpacer1);
+
+                //---- resetButton ----
+                resetButton.setText("Reset");
+                resetButton.addActionListener(e -> resetButtonActionPerformed(e));
+                panel2.add(resetButton);
             }
             mainPanel.add(panel2, BorderLayout.SOUTH);
         }
@@ -924,7 +955,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     private JButton forwardButton;
     private JButton fastForwardButton;
     private JButton showPieces;
-    private JButton resetButton;
+    private JButton layoutButton;
     private JButton notationButton;
+    private JPanel hSpacer1;
+    private JButton resetButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 }

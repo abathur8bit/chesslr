@@ -58,14 +58,22 @@ new FormModel {
 						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "showPiecesActionPerformed", true ) )
 					} )
 					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "resetButton"
-						"text": "Reset"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "resetButtonActionPerformed", true ) )
+						name: "layoutButton"
+						"text": "L"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "layoutButtonActionPerformed", false ) )
 					} )
 					add( new FormComponent( "javax.swing.JButton" ) {
 						name: "notationButton"
 						"text": "N"
 						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "notationButtonActionPerformed", true ) )
+					} )
+					add( new FormComponent( "com.jformdesigner.designer.wrapper.HSpacer" ) {
+						name: "hSpacer1"
+					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "resetButton"
+						"text": "Reset"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "resetButtonActionPerformed", true ) )
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "South"
@@ -121,7 +129,7 @@ new FormModel {
 			}
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 0 )
-			"size": new java.awt.Dimension( 605, 300 )
+			"size": new java.awt.Dimension( 660, 300 )
 		} )
 	}
 }

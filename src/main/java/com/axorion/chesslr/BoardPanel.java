@@ -41,6 +41,11 @@ public class BoardPanel extends JPanel {
 
     SquareStatus[] squareStatus = new SquareStatus[64];
 
+    int shadeWhite = 200;
+    int shadeBlack = 100;
+    Color whiteColor = new Color(shadeWhite,shadeWhite,shadeWhite);
+    Color blackColor = new Color(shadeBlack,shadeBlack,shadeBlack);
+
     public BoardPanel(AppFrame parent) {
         this.parent = parent;
         Image pieceStrip = parent.loadImage("alpha_black.png");
@@ -76,10 +81,6 @@ public class BoardPanel extends JPanel {
         repaint();
     }
     public void renderBoard(Graphics2D g2,int xoffset,int yoffset,int size) {
-        int shadeWhite = 200;
-        int shadeBlack = 100;
-        Color whiteColor = new Color(shadeWhite,shadeWhite,shadeWhite);
-        Color blackColor = new Color(shadeBlack,shadeBlack,shadeBlack);
         Color currentColor = whiteColor;
         for(int y=0; y<8; y++) {
             if(y%2 == 0) {
@@ -95,16 +96,16 @@ public class BoardPanel extends JPanel {
                         g2.setColor(currentColor);
                         break;
                     case ERROR:
-                        g2.setColor(Color.red);
+                        setColor(g2,currentColor,Color.red);
                         break;
                     case WARNING:
-                        g2.setColor(Color.yellow);
+                        setColor(g2,currentColor,Color.yellow);
                         break;
                     case SELECTED:
-                        g2.setColor(Color.green);
+                        setColor(g2,currentColor,Color.green);
                         break;
                     case MOVED:
-                        g2.setColor(Color.green.darker());
+                        setColor(g2,currentColor,Color.cyan);
                         break;
                 }
                 g2.fillRect(xoffset+x*size,yoffset+y*size,size,size);
@@ -117,6 +118,14 @@ public class BoardPanel extends JPanel {
         }
         drawBoardOutline(g2,blackColor,xoffset,yoffset,size);
 //        drawBoardLetters(g2,xoffset,yoffset,size);
+    }
+
+    protected void setColor(Graphics2D g2,Color currentColor,Color newColor) {
+        if(currentColor == whiteColor)
+            g2.setColor(newColor.darker());
+        else
+            g2.setColor(newColor.darker().darker());
+
     }
 
     public void drawBoardOutline(Graphics2D g2,Color blackColor,int xoffset,int yoffset,int size) {
