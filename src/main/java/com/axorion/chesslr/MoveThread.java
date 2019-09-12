@@ -66,6 +66,11 @@ public class MoveThread extends Thread {
                             }
                             parent.chessBoardController.led(up,false);
                             parent.chessBoardController.led(down,false);
+
+                            //show move on display board
+                            parent.board.resetBoard();
+                            parent.showLastMove();
+
                             parent.pieceUpIndex = -1;
                             parent.pieceDownIndex = -1;
                             parent.secondPieceUpIndex = -1;

@@ -22,6 +22,13 @@ import javax.swing.*;
 import java.awt.*;
 
 public class BoardPanel extends JPanel {
+    enum SquareStatus {
+        NORMAL,
+        WARNING,
+        SELECTED,
+        ERROR,
+        MOVED
+    }
     AppFrame parent;
     Image[] blackPieceImages;
     Image[] whitePieceImages;
@@ -32,7 +39,7 @@ public class BoardPanel extends JPanel {
     int squareWidth=60;     //80
     int squareHeight=60;
 
-    int[] squareStatus = new int[64];
+    SquareStatus[] squareStatus = new SquareStatus[64];
 
     public BoardPanel(AppFrame parent) {
         this.parent = parent;
@@ -45,9 +52,12 @@ public class BoardPanel extends JPanel {
         letters = parent.loadImageStrip("letters.png",16,172/16,12,0);
 
         setPreferredSize(new Dimension(squareWidth*8,squareHeight*8));
+        for(SquareStatus status : squareStatus) {
+            status = SquareStatus.NORMAL;
+        }
     }
 
-    public void setSquareStatus(int boardIndex,int status) {
+    public void setSquareStatus(int boardIndex,SquareStatus status) {
         squareStatus[boardIndex] = status;
         repaint();
     }
@@ -61,7 +71,7 @@ public class BoardPanel extends JPanel {
 
     public void resetBoard() {
         for(int i=0; i<squareStatus.length; i++) {
-            squareStatus[i] = 0;
+            squareStatus[i] = SquareStatus.NORMAL;
         }
         repaint();
     }
@@ -80,12 +90,22 @@ public class BoardPanel extends JPanel {
 
             for(int x=0; x<8; x++) {
                 final int index = y*8+x;
-                if(squareStatus[index] == 0) {
-                    g2.setColor(currentColor);
-                } else if(squareStatus[index] == 1) {
-                    g2.setColor(Color.red);
-                } else if(squareStatus[index] == 2) {
-                    g2.setColor(Color.yellow);
+                switch(squareStatus[index]) {
+                    case NORMAL:
+                        g2.setColor(currentColor);
+                        break;
+                    case ERROR:
+                        g2.setColor(Color.red);
+                        break;
+                    case WARNING:
+                        g2.setColor(Color.yellow);
+                        break;
+                    case SELECTED:
+                        g2.setColor(Color.green);
+                        break;
+                    case MOVED:
+                        g2.setColor(Color.green.darker());
+                        break;
                 }
                 g2.fillRect(xoffset+x*size,yoffset+y*size,size,size);
                 if(currentColor == whiteColor) {
