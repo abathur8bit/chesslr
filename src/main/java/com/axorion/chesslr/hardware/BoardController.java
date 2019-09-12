@@ -180,7 +180,7 @@ public class BoardController {
         flashThread.reset();
     }
 
-    public void blink(final int count, final long delay, final int boardIndex) {
+    public void blink(final int count, final long delay, final boolean leaveOn, final int boardIndex) {
         new Thread(() -> {
                 try {
                     if(isLEDOn(boardIndex)) {
@@ -193,8 +193,9 @@ public class BoardController {
                         led(boardIndex,false);
                         Thread.sleep(delay);
                     }
+                    led(boardIndex,leaveOn);
                 } catch(InterruptedException e) {
-                    led(boardIndex,false);
+                    led(boardIndex,leaveOn);
                 }
             }).start();
     }

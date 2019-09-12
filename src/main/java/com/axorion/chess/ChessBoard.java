@@ -55,6 +55,15 @@ public class ChessBoard
     boolean castleBlackKingSide = true;
     boolean castleBlackQueenSide = true;
 
+//    String boardLetters =
+//            "ppp     "+
+//            "        "+
+//            "PPP     "+
+//            "        "+
+//            "        "+
+//            "        "+
+//            "        "+
+//            "        ";
     String boardLetters =
             "rnbqkbnr"+
             "pppppppp"+
@@ -537,5 +546,9 @@ public class ChessBoard
         fen.append(" "+(fullMoveCounter+1));
 
         return fen.toString();
+    }
+
+    public String toString() {
+        return toFen();
     }
 }

@@ -29,7 +29,7 @@ package com.axorion.chesslr;
 public class MoveThread extends Thread {
     AppFrame parent;
     Object lock = new Object();
-    Integer up = -1,down = -1;
+    Integer up = -1,down = -1,secondUp = -1;
     boolean sleepInterrupted = false;
     volatile boolean running = false;
 
@@ -56,8 +56,11 @@ public class MoveThread extends Thread {
                     // If not, player is still sliding his piece.
                     if(running && up != -1 && down != -1) {
                         //check if player has moved since we got both up and down events
-                        if(up == parent.pieceUpIndex && down == parent.pieceDownIndex) {
-                            if(up != down) {   //make sure we are not dropping the piece on the same square
+                        if((up == parent.pieceUpIndex || up == parent.secondPieceUpIndex) && down == parent.pieceDownIndex) {
+                            if(up != down || secondUp != -1) {   //are we putting the piece back down or capturing?
+                                if(down == up) {
+                                    up = secondUp;  //you picked up the captured piece first, so the second piece up is what we are moving from
+                                }
                                 String playersMove = parent.chessBoard.indexToBoard(up)+parent.chessBoard.indexToBoard(down);
                                 parent.recordMove(playersMove);
                             }
@@ -65,8 +68,8 @@ public class MoveThread extends Thread {
                             parent.chessBoardController.led(down,false);
                             parent.pieceUpIndex = -1;
                             parent.pieceDownIndex = -1;
-                            up = -1;
-                            down = -1;
+                            parent.secondPieceUpIndex = -1;
+                            up = down = secondUp = -1;
                         }
                     }
                 }
@@ -77,11 +80,12 @@ public class MoveThread extends Thread {
         }
     }
 
-    public void waitForMoveComplete(int up,int down) {
+    public void waitForMoveComplete(int up,int down,int secondUp) {
         synchronized(lock) {
             sleepInterrupted = true;
             this.up = up;
             this.down = down;
+            this.secondUp = secondUp;
             this.interrupt(); //interrupt sleep cycle so it starts again
         }
     }

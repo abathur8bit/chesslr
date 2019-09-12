@@ -88,7 +88,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             Color.magenta,
             Color.orange,
     };
-    Color buttonBackgroundColor = null;
+    Color buttonDefaultColor = null;
+    Color buttonSelectedColor = Color.gray;
     int colorIndex=0;
     boolean isShowingPieces = false;
     MoveThread moveThread = new MoveThread(this);
@@ -96,8 +97,10 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     String waitForMove = null;
     String waitForPieceUp = null;
     String waitForPieceDown = null;
+    boolean takebackCapture = false;
     GameMode mode = GameMode.PLAYING;
     GameMode previousMode = null;
+    boolean pgnNotation = true;
 
     public AppFrame(String title,boolean boardAttached) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
@@ -160,12 +163,16 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         setButtonImage(fastForwardButton,"button-fastforward.png");
         setButtonImage(showPieces,"button-show.png");
         setButtonImage(resetButton,"button-reset.png");
+        setButtonImage(notationButton,null);
+
 
         if(boardAttached) {
             gpio = GpioFactory.getInstance();
             initHardware();
             moveThread.start();
         }
+
+        resetBoard();
     }
 
     /** Start waiting for a specific move to be made.
@@ -202,6 +209,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 //            waitForPieceDown = null;
 //        }
     }
+
     /** Any text that is added to the moves text area will automatically scroll into view. */
     private void movesAutoScroll() {
         DefaultCaret caret = (DefaultCaret) movesTextArea.getCaret();
@@ -211,9 +219,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     private void setButtonImage(JButton bn,String iconName) {
         final int size = 50;
         Dimension preferredSize = new Dimension(size,size);
-        bn.setText("");
-        Image im = loadImage(iconName).getScaledInstance((int)(size*0.8),(int)(size*0.8),SCALE_SMOOTH);
-        bn.setIcon(new ImageIcon(im));
+        if(iconName != null) {
+            bn.setText("");
+            Image im = loadImage(iconName).getScaledInstance((int)(size*0.8),(int)(size*0.8),SCALE_SMOOTH);
+            bn.setIcon(new ImageIcon(im));
+        }
         bn.setPreferredSize(preferredSize);
     }
 
@@ -287,7 +297,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     /**
      * Piece was lifted off the board.
      *
-     * todo: If we are showing valid moves, light up all squares that piece can be dropped on.
+     * TODO If we are showing valid moves, light up all squares that piece can be dropped on.
      *
      * @param boardIndex location piece was picked up from.
      */
@@ -319,14 +329,12 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                     SwingUtilities.invokeLater(() -> {
                         chessBoardController.flashOn(boardIndex);
                         board.setSquareStatus(boardIndex,1);
-                        board.repaint();
                     });
 
                     JOptionPane.showMessageDialog(this,"Replace piece at "+square.toUpperCase(),"Invalid move",JOptionPane.ERROR_MESSAGE);
                     SwingUtilities.invokeLater(() -> {
                         chessBoardController.flashOff(boardIndex);
                         board.setSquareStatus(boardIndex,0);
-                        board.repaint();
                     });
                 } else {
                     System.out.println("Got expected piece up ");
@@ -334,6 +342,17 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                     chessBoardController.led(boardIndex,false);
                 }
                 break;
+
+            case WAIT_FOR_PIECE_DOWN:
+                SwingUtilities.invokeLater(() -> {
+                    chessBoardController.flashOn(boardIndex);
+                    board.setSquareStatus(boardIndex,1);
+                });
+                JOptionPane.showMessageDialog(this,"Replace piece at "+square.toUpperCase()+".\nWaiting for piece at "+waitForPieceDown,"Invalid move",JOptionPane.ERROR_MESSAGE);
+                SwingUtilities.invokeLater(() -> {
+                    chessBoardController.flashOff(boardIndex);
+                    board.setSquareStatus(boardIndex,0);
+                });
 
             default:
                 System.out.println("Ignoring piece up at "+boardIndex+" for mode "+mode);
@@ -344,8 +363,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     /**
      * Piece was put back onto the board at the given boardIndex.
      *
-     * todo: If king is in check, flash kings square once or twice.
-     * todo: If showing valid moves, turn off all LEDs.
+     * TODO If king is in check, flash kings square once or twice.
+     * TODO If showing valid moves, turn off all LEDs.
      *
      * @param boardIndex location piece was dropped.
      */
@@ -360,7 +379,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 if(pieceDownIndex != -1) {
                     chessBoardController.led(pieceDownIndex,false);    //turn off previous led
                 }
-                //todo check if we picked up two pieces, and if so,
+                //TODO check if we picked up two pieces, and if so,
                 // need to figure out if we are capturing
                 pieceDownIndex = boardIndex;
                 chessBoardController.led(pieceDownIndex,true);
@@ -372,20 +391,29 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                     SwingUtilities.invokeLater(() -> {
                         chessBoardController.flashOn(boardIndex);
                         board.setSquareStatus(boardIndex,1);
-                        board.repaint();
                     });
 
                     JOptionPane.showMessageDialog(this,"Remove piece at "+square.toUpperCase(),"Invalid move",JOptionPane.ERROR_MESSAGE);
                     SwingUtilities.invokeLater(() -> {
                         chessBoardController.flashOff(boardIndex);
                         board.setSquareStatus(boardIndex,0);
-                        board.repaint();
                     });
                 } else {
                     System.out.println("Got expected piece down");
-                    setWaitForMove(null);
                     chessBoardController.led(boardIndex,false);
-                    mode = GameMode.PLAYING;
+                    if(takebackCapture) {
+                        waitForPieceDown = chessBoard.from(waitForMove);
+                        int waitIndex = chessBoard.boardToIndex(waitForPieceDown);
+                        takebackCapture = false;
+                        chessBoardController.blink(3,100,true,waitIndex);
+                        chessBoardController.led(waitIndex,true);
+                        board.setSquareStatus(waitIndex,2);
+                    } else {
+                        board.setSquareStatus(chessBoard.boardToIndex(waitForPieceDown),0);
+                        setWaitForMove(null);
+                        mode = GameMode.PLAYING;
+                    }
+
                 }
                 break;
 
@@ -393,38 +421,19 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 System.out.println("Ignoring piece down for mode "+mode);
                 break;
         }
-
-
-
-//        if(isShowingPieces) {
-//            showPieces(true);
-//        } else {
-//            if(waitForPieceDown != null) {
-//                chessBoardController.led(boardIndex,false);
-//                waitForPieceDown = null;
-//
-//            } else {
-//                if(pieceDownIndex != -1) {
-//                    chessBoardController.led(pieceDownIndex,false);    //turn off previous led
-//                }
-//                pieceDownIndex = boardIndex;
-//                chessBoardController.led(pieceDownIndex,true);
-//                processMove();
-//            }
-//        }
     }
 
     /** If we have a square that had a piece up and one down, then we can process a move. */
     private void processMove() {
         if(pieceUpIndex != -1 && pieceDownIndex != -1) {
-            moveThread.waitForMoveComplete(pieceUpIndex,pieceDownIndex);
+            moveThread.waitForMoveComplete(pieceUpIndex,pieceDownIndex,secondPieceUpIndex);
         }
         enableButtons();
     }
 
     public void recordMove(String move) {
         chessBoard.move(move);
-        movesTextArea.setText(chessBoard.getMovesPgn());
+        updateMovesText();
         board.repaint();
         enableButtons();
     }
@@ -435,10 +444,16 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
         if(chessBoard.getScoreCard().size() > 0) {
             backButton.setEnabled(true);
-//            fastBackButton.setEnabled(true);
+//            fastBackButton.setEnabled(true);  //TODO fast back should take back again after the player finishes the forced move until the button is clicked again.
         } else {
             backButton.setEnabled(false);
             fastBackButton.setEnabled(false);
+        }
+
+        if(pgnNotation) {
+            notationButton.setBackground(buttonSelectedColor);
+        } else {
+            notationButton.setBackground(buttonDefaultColor);
         }
     }
 
@@ -458,7 +473,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
     private void resetBoard() {
         showPieces(false);
-        chessBoardController.resetBoard();
+        if(boardAttached) {
+            chessBoardController.resetBoard();
+        }
         chessBoard.resetBoard();
         board.resetBoard();
         pieceUpIndex = -1;
@@ -623,14 +640,14 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 }
             }
         }
-        if(buttonBackgroundColor == null) {
-            buttonBackgroundColor = showPieces.getBackground();
+        if(buttonDefaultColor == null) {
+            buttonDefaultColor = showPieces.getBackground();
         }
         if(isShowingPieces) {
-            showPieces.setBackground(Color.gray);
+            showPieces.setBackground(buttonSelectedColor);
         }
         else {
-            showPieces.setBackground(buttonBackgroundColor);
+            showPieces.setBackground(buttonDefaultColor);
         }
 
         enableButtons();
@@ -660,21 +677,41 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void backButtonActionPerformed(ActionEvent e) {
-        String move = chessBoard.takeback();
+        String move = chessBoard.takeback();    //TODO If a move removed a piece, flash the square that needs the piece replaced after the move is complete.
         if(move != null) {
-            String from = chessBoard.from(move);
-            String to = chessBoard.to(move);
-            final String waitMove = to+from;
+            String to = chessBoard.from(move);  //reversing move
+            String from = chessBoard.to(move);  //reversing move
+            final String waitMove = from+to;
+            if(chessBoard.pieceAt(from) != ChessBoard.EMPTY_SQUARE) {
+                System.out.println("Move was a capture");
+                takebackCapture = true;
+            }
 
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     setWaitForMove(waitMove);
-                    movesTextArea.setText(chessBoard.getMovesPgn());
+                    updateMovesText();
                     enableButtons();
                     board.repaint();
                 }
             });
         }
+    }
+
+    /** Sets the text in the moves text area, taking into account what notation display mode
+     * we are using.     */
+    private void updateMovesText() {
+        if(pgnNotation)
+            movesTextArea.setText(chessBoard.getMovesPgn());
+        else
+            movesTextArea.setText(chessBoard.getMoveString());
+    }
+
+    private void notationButtonActionPerformed(ActionEvent e) {
+        pgnNotation = !pgnNotation;
+        enableButtons();
+        updateMovesText();
+        repaint();
     }
 
     private void initComponents() {
@@ -700,6 +737,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         fastForwardButton = new JButton();
         showPieces = new JButton();
         resetButton = new JButton();
+        notationButton = new JButton();
 
         //======== this ========
         setResizable(false);
@@ -822,6 +860,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 resetButton.setText("Reset");
                 resetButton.addActionListener(e -> resetButtonActionPerformed(e));
                 panel2.add(resetButton);
+
+                //---- notationButton ----
+                notationButton.setText("N");
+                notationButton.addActionListener(e -> notationButtonActionPerformed(e));
+                panel2.add(notationButton);
             }
             mainPanel.add(panel2, BorderLayout.SOUTH);
         }
@@ -853,5 +896,6 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     private JButton fastForwardButton;
     private JButton showPieces;
     private JButton resetButton;
+    private JButton notationButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 }

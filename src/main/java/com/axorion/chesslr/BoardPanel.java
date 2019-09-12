@@ -49,6 +49,7 @@ public class BoardPanel extends JPanel {
 
     public void setSquareStatus(int boardIndex,int status) {
         squareStatus[boardIndex] = status;
+        repaint();
     }
 
     @Override
@@ -83,6 +84,8 @@ public class BoardPanel extends JPanel {
                     g2.setColor(currentColor);
                 } else if(squareStatus[index] == 1) {
                     g2.setColor(Color.red);
+                } else if(squareStatus[index] == 2) {
+                    g2.setColor(Color.yellow);
                 }
                 g2.fillRect(xoffset+x*size,yoffset+y*size,size,size);
                 if(currentColor == whiteColor) {

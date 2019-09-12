@@ -62,6 +62,11 @@ new FormModel {
 						"text": "Reset"
 						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "resetButtonActionPerformed", true ) )
 					} )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "notationButton"
+						"text": "N"
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "notationButtonActionPerformed", true ) )
+					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "South"
 				} )
@@ -116,7 +121,7 @@ new FormModel {
 			}
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 0 )
-			"size": new java.awt.Dimension( 500, 300 )
+			"size": new java.awt.Dimension( 605, 300 )
 		} )
 	}
 }
