@@ -262,7 +262,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
     }
 
-    private void setButtonImage(JButton bn,String iconName) {
+    public void setButtonImage(JButton bn,String iconName) {
         final int size = 50;
         Dimension preferredSize = new Dimension(size,size);
         if(iconName != null) {

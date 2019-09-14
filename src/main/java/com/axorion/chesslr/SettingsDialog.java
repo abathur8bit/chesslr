@@ -13,15 +13,20 @@ import java.awt.*;
  * @author Lee Patterson
  */
 public class SettingsDialog extends JDialog {
+    AppFrame parent;
     protected int selectedOption = 0;
     public boolean newOnePlayer = false;
     public boolean newTwoPlayer = false;
     public boolean asBlack = false;
 
-    public SettingsDialog(Frame owner) {
+    public SettingsDialog(AppFrame owner) {
         super(owner);
+        this.parent = owner;    //using the AppFrame for button image loading for the moment
         initComponents();
         setSize(480,780);
+        parent.setButtonImage(onePlayerButton,"button-onePlayerWhite.png");
+        parent.setButtonImage(twoPlayerButton,"button-twoPlayer.png");
+        parent.setButtonImage(onePlayerBlackButton,"button-onePlayerBlack.png");
     }
 
     public SettingsDialog(Dialog owner) {
