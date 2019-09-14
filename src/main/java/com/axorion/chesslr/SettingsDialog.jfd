@@ -1,0 +1,89 @@
+JFDML JFormDesigner: "6.0.6.4.204" Java: "11.0.3" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormWindow( "javax.swing.JDialog", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+			name: "this"
+			"modal": true
+			"resizable": false
+			"minimumSize": new java.awt.Dimension( 480, 780 )
+			"title": "Options"
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+				name: "dialogPane"
+				"border": new javax.swing.border.EmptyBorder( 12, 12, 12, 12 )
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.GridLayout ) {
+					"columns": 1
+					"rows": 0
+				} ) {
+					name: "contentPanel"
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {
+						"alignment": 0
+					} ) {
+						name: "generalPanel"
+						"border": new javax.swing.border.TitledBorder( "General" )
+						add( new FormComponent( "javax.swing.JCheckBox" ) {
+							name: "pgnNotationCheckbox"
+							"text": "PGN Notation"
+						} )
+					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {
+						"alignment": 0
+					} ) {
+						name: "gamePanel"
+						"border": new javax.swing.border.TitledBorder( "Game" )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "onePlayerButton"
+							"text": "1"
+							"preferredSize": &Dimension0 new java.awt.Dimension( 78, 50 )
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "onePlayerButtonActionPerformed", false ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "onePlayerBlackButton"
+							"text": "1 B"
+							"preferredSize": new java.awt.Dimension( 78, 50 )
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "onePlayerBlackButtonActionPerformed", false ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "twoPlayerButton"
+							"text": "2"
+							"preferredSize": #Dimension0
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "twoPlayerButtonActionPerformed", false ) )
+						} )
+					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {
+						"alignment": 0
+					} ) {
+						name: "enginePanel"
+						"border": new javax.swing.border.TitledBorder( "Engine" )
+						add( new FormComponent( "javax.swing.JCheckBox" ) {
+							name: "checkBox7"
+							"text": "Show evaluation"
+						} )
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "Center"
+				} )
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {
+					"alignment": 2
+				} ) {
+					name: "buttonBar"
+					"border": new javax.swing.border.EmptyBorder( 12, 0, 0, 0 )
+					add( new FormComponent( "javax.swing.JButton" ) {
+						name: "okButton"
+						"text": "Close"
+						"preferredSize": new java.awt.Dimension( 78, 50 )
+						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "okButtonActionPerformed", false ) )
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "South"
+				} )
+			}, new FormLayoutConstraints( class java.lang.String ) {
+				"value": "Center"
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 0 )
+			"size": new java.awt.Dimension( 470, 490 )
+		} )
+	}
+}

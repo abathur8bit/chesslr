@@ -15,6 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * ******************************************************************************/
+/* *****************************************************************************
+ * Copyright 2018 Lee Patterson <https://github.com/abathur8bit>
+ *
+ * You may use and modify at will. Please credit me in the source.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ******************************************************************************/
 
 package com.axorion.chesslr;
 
@@ -25,6 +42,7 @@ import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
+import com.rahul.stockfish.Stockfish;
 
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
@@ -45,6 +63,8 @@ import java.lang.reflect.Proxy;
 import java.net.URL;
 
 import static java.awt.Image.SCALE_SMOOTH;
+
+//import com.github.bhlangonijr.chesslib.Board;
 
 //import oled.OLEDDisplay;
 
@@ -68,6 +88,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     String blackPieceLetters = "pnbrqk";
     BoardPanel board;
     ChessBoard chessBoard = new ChessBoard();
+//    Board boardValidator = new Board();
     Integer pieceUpIndex = -1;      //the square that a piece was lifted from
     Integer pieceDownIndex = -1;    //the square that a piece was dropped onto
     Integer secondPieceUpIndex = -1;
@@ -75,6 +96,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     FileDialog fileDialog;      //used by mac
     boolean isMac = false;
     ChessPrefs prefs;
+    SettingsDialog settingsDialog;
 //    OptionsDialog optionsDialog;
 //    HelpDialog helpDialog;
     AboutDialog aboutDialog;
@@ -103,7 +125,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     GameMode previousMode = null;
     boolean pgnNotation = true;
 
+    int numberPlayers = 1;
+
     SimBoard simBoard;
+    Stockfish fish = new Stockfish();
+    String stockfishPath = "../stockfish/cmake-build-debug/stockfish";
 
     public AppFrame(String title,boolean boardAttached) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
@@ -165,9 +191,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         setButtonImage(forwardButton,"button-forward.png");
         setButtonImage(fastForwardButton,"button-fastforward.png");
         setButtonImage(showPieces,"button-show.png");
-        setButtonImage(resetButton,"button-reset.png");
-        setButtonImage(notationButton,null);
+        setButtonImage(settingsButton,"button-settings.png");
         setButtonImage(layoutButton,null);
+
+        buttonPanel.remove(fastBackButton);
+        buttonPanel.remove(fastForwardButton);
 
 
         if(boardAttached) {
@@ -182,6 +210,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         moveThread.start();
 
         resetBoard();
+
+        if(fish.startEngine(ChessLR.stockfishPath) == false)
+            setMessage("Unable to start stockfish");
+        else
+            setMessage("Stockfish ready");
     }
 
     /** Start waiting for a specific move to be made.
@@ -303,8 +336,12 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
     public void startApp() throws IOException {
         resetBoard();
-        startup();
         setVisible(true);
+        settingsDialog = new SettingsDialog(this);  //construct here, so correct window size and position can be determined.
+        SwingUtilities.invokeLater(() -> {
+            startup();
+        });
+
         if(!boardAttached) {
             simBoard.setLocation(getX()+getWidth(),getY());
             simBoard.setVisible(true);
@@ -463,10 +500,22 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     public void recordMove(String move) {
+//        boardValidator.loadFromFen(chessBoard.toFen());
+//        boolean legal = boardValidator.isMoveLegal(new Move(
+//                Square.fromValue(chessBoard.from(move).toUpperCase()),
+//                Square.fromValue(chessBoard.to(move).toUpperCase())),true);
+//        System.out.println("Move legal "+legal);
         chessBoard.move(move);
         updateMovesText();
         board.repaint();
         enableButtons();
+//        try {
+//            float score = fish.getEvalScore(chessBoard.toFen(),1);
+//            setMessage("Score "+score);
+//        } catch(IOException e) {
+//            setMessage("Stockfish restarted");
+//            fish.startEngine(ChessLR.stockfishPath);
+//        }
     }
 
     public void enableButtons() {
@@ -480,23 +529,33 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             backButton.setEnabled(false);
             fastBackButton.setEnabled(false);
         }
-
-        if(pgnNotation) {
-            notationButton.setBackground(buttonSelectedColor);
-        } else {
-            notationButton.setBackground(buttonDefaultColor);
-        }
     }
 
     public void startup() {
-        try {
-            for(int i = 0; i < 9; ++i) {
-                chessBoardController.getLedController().led(i,true);
-                Thread.sleep(100);
-                chessBoardController.getLedController().led(i,false);
+        new Thread(() -> {
+            try {
+                for(int i = 0; i < 64; ++i) {
+                    chessBoardController.led(i,true);
+                    Thread.sleep(100);
+                    chessBoardController.led(i,false);
+                }
+
+                Thread.sleep(1000);
+                for(int i=1; i<9; i++) {
+                    row(i,true);
+                    Thread.sleep(100);
+                    row(i,false);
+                }
+            } catch(InterruptedException e) {
+                //do nothing
             }
-        } catch(InterruptedException e) {
-            //do nothing
+        }).start();
+    }
+
+    private void row(int r,boolean on){
+        int start = (r-1)*8;
+        for(int i=0; i<8; i++) {
+            chessBoardController.led(start+i,on);
         }
     }
 
@@ -525,7 +584,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         } else if (meth.getName().equals("handleAbout")) {
             aboutMenuItemActionPerformed(null);
         } else if (meth.getName().equals("handlePrefs")) {
-            optionsMenuItemActionPerformed(null);
+            settingsButtonActionPerformed();
         }
 
         return null;
@@ -680,10 +739,6 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         enableButtons();
     }
 
-    private void resetButtonActionPerformed(ActionEvent e) {
-        resetBoard();
-    }
-
     private void forwardButtonActionPerformed(ActionEvent e) {
     }
 
@@ -739,13 +794,6 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             movesTextArea.setText(chessBoard.getMoveString());
     }
 
-    private void notationButtonActionPerformed(ActionEvent e) {
-        pgnNotation = !pgnNotation;
-        enableButtons();
-        updateMovesText();
-        repaint();
-    }
-
     private void layoutButtonActionPerformed() {
         if(mode == GameMode.SHOW_LAYOUT) {
             layoutButton.setBackground(buttonDefaultColor);
@@ -756,14 +804,45 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             }
             showLastMove();
         } else {
-            layoutButton.setBackground(buttonDefaultColor);
-            layoutButton.setSelected(false);
+            layoutButton.setBackground(buttonSelectedColor);
+            layoutButton.setSelected(true);
             mode = GameMode.SHOW_LAYOUT;
             for(int i = 0; i < 64; i++) {
                 boolean on = chessBoard.pieceAt(i) == ChessBoard.EMPTY_SQUARE ? false : true;
                 chessBoardController.led(i,on);
             }
         }
+    }
+
+    private void settingsButtonActionPerformed() {
+        settingsDialog.setPgnNotation(pgnNotation);
+        settingsDialog.open();
+        if(settingsDialog.isPgnNotation() != pgnNotation) {
+            pgnNotation = settingsDialog.isPgnNotation();
+            enableButtons();
+            updateMovesText();
+            repaint();
+        }
+
+        if(settingsDialog.isNewOnePlayer()) {
+            resetBoard();
+            numberPlayers = 1;
+            if(settingsDialog.asBlack)
+                setMessage("New 1 player as black started");
+            else
+                setMessage("New 1 player started");
+        } else if(settingsDialog.isNewTwoPlayer()) {
+            resetBoard();
+            numberPlayers = 2;
+            setMessage("New 2 player started");
+        }
+        //TODO Options should be available in the settings dialog
+        //  and settings should be persisted when dialog is closed.
+    }
+
+    /** Set the text on the message bar. */
+    public void setMessage(String s) {
+        messageLabel.setText(s);
     }
 
     private void initComponents() {
@@ -782,16 +861,16 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         mainPanel = new JPanel();
         movesScrollPane = new JScrollPane();
         movesTextArea = new JTextArea();
-        panel2 = new JPanel();
+        messageButtonPanel = new JPanel();
+        messageLabel = new JLabel();
+        buttonPanel = new JPanel();
         fastBackButton = new JButton();
         backButton = new JButton();
         forwardButton = new JButton();
         fastForwardButton = new JButton();
         showPieces = new JButton();
         layoutButton = new JButton();
-        notationButton = new JButton();
-        hSpacer1 = new JPanel(null);
-        resetButton = new JButton();
+        settingsButton = new JButton();
 
         //======== this ========
         setResizable(false);
@@ -881,52 +960,56 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             }
             mainPanel.add(movesScrollPane, BorderLayout.CENTER);
 
-            //======== panel2 ========
+            //======== messageButtonPanel ========
             {
-                panel2.setLayout(new FlowLayout());
+                messageButtonPanel.setLayout(new BorderLayout());
 
-                //---- fastBackButton ----
-                fastBackButton.setText("<<");
-                panel2.add(fastBackButton);
+                //---- messageLabel ----
+                messageLabel.setText("text");
+                messageButtonPanel.add(messageLabel, BorderLayout.NORTH);
 
-                //---- backButton ----
-                backButton.setText("<");
-                backButton.addActionListener(e -> backButtonActionPerformed(e));
-                panel2.add(backButton);
+                //======== buttonPanel ========
+                {
+                    buttonPanel.setLayout(new FlowLayout());
 
-                //---- forwardButton ----
-                forwardButton.setText(">");
-                forwardButton.addActionListener(e -> forwardButtonActionPerformed(e));
-                panel2.add(forwardButton);
+                    //---- fastBackButton ----
+                    fastBackButton.setText("<<");
+                    buttonPanel.add(fastBackButton);
 
-                //---- fastForwardButton ----
-                fastForwardButton.setMinimumSize(new Dimension(78, 78));
-                fastForwardButton.setText(">>");
-                fastForwardButton.addActionListener(e -> fastForwardButtonActionPerformed(e));
-                panel2.add(fastForwardButton);
+                    //---- backButton ----
+                    backButton.setText("<");
+                    backButton.addActionListener(e -> backButtonActionPerformed(e));
+                    buttonPanel.add(backButton);
 
-                //---- showPieces ----
-                showPieces.setText("Show");
-                showPieces.addActionListener(e -> showPiecesActionPerformed(e));
-                panel2.add(showPieces);
+                    //---- forwardButton ----
+                    forwardButton.setText(">");
+                    forwardButton.addActionListener(e -> forwardButtonActionPerformed(e));
+                    buttonPanel.add(forwardButton);
 
-                //---- layoutButton ----
-                layoutButton.setText("L");
-                layoutButton.addActionListener(e -> layoutButtonActionPerformed());
-                panel2.add(layoutButton);
+                    //---- fastForwardButton ----
+                    fastForwardButton.setMinimumSize(new Dimension(78, 78));
+                    fastForwardButton.setText(">>");
+                    fastForwardButton.addActionListener(e -> fastForwardButtonActionPerformed(e));
+                    buttonPanel.add(fastForwardButton);
 
-                //---- notationButton ----
-                notationButton.setText("N");
-                notationButton.addActionListener(e -> notationButtonActionPerformed(e));
-                panel2.add(notationButton);
-                panel2.add(hSpacer1);
+                    //---- showPieces ----
+                    showPieces.setText("Show");
+                    showPieces.addActionListener(e -> showPiecesActionPerformed(e));
+                    buttonPanel.add(showPieces);
 
-                //---- resetButton ----
-                resetButton.setText("Reset");
-                resetButton.addActionListener(e -> resetButtonActionPerformed(e));
-                panel2.add(resetButton);
+                    //---- layoutButton ----
+                    layoutButton.setText("L");
+                    layoutButton.addActionListener(e -> layoutButtonActionPerformed());
+                    buttonPanel.add(layoutButton);
+
+                    //---- settingsButton ----
+                    settingsButton.setText("Settings");
+                    settingsButton.addActionListener(e -> settingsButtonActionPerformed());
+                    buttonPanel.add(settingsButton);
+                }
+                messageButtonPanel.add(buttonPanel, BorderLayout.CENTER);
             }
-            mainPanel.add(panel2, BorderLayout.SOUTH);
+            mainPanel.add(messageButtonPanel, BorderLayout.SOUTH);
         }
         contentPane.add(mainPanel, BorderLayout.CENTER);
         pack();
@@ -949,15 +1032,15 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     private JPanel mainPanel;
     private JScrollPane movesScrollPane;
     protected JTextArea movesTextArea;
-    private JPanel panel2;
+    private JPanel messageButtonPanel;
+    private JLabel messageLabel;
+    private JPanel buttonPanel;
     private JButton fastBackButton;
     private JButton backButton;
     private JButton forwardButton;
     private JButton fastForwardButton;
     private JButton showPieces;
     private JButton layoutButton;
-    private JButton notationButton;
-    private JPanel hSpacer1;
-    private JButton resetButton;
+    private JButton settingsButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 }

@@ -30,50 +30,53 @@ new FormModel {
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "Center"
 				} )
-				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) ) {
-					name: "panel2"
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "fastBackButton"
-						"text": "<<"
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
+					name: "messageButtonPanel"
+					add( new FormComponent( "javax.swing.JLabel" ) {
+						name: "messageLabel"
+						"text": "text"
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "North"
 					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "backButton"
-						"text": "<"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "backButtonActionPerformed", true ) )
-					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "forwardButton"
-						"text": ">"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "forwardButtonActionPerformed", true ) )
-					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "fastForwardButton"
-						"minimumSize": new java.awt.Dimension( 78, 78 )
-						"text": ">>"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "fastForwardButtonActionPerformed", true ) )
-					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "showPieces"
-						"text": "Show"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "showPiecesActionPerformed", true ) )
-					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "layoutButton"
-						"text": "L"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "layoutButtonActionPerformed", false ) )
-					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "notationButton"
-						"text": "N"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "notationButtonActionPerformed", true ) )
-					} )
-					add( new FormComponent( "com.jformdesigner.designer.wrapper.HSpacer" ) {
-						name: "hSpacer1"
-					} )
-					add( new FormComponent( "javax.swing.JButton" ) {
-						name: "resetButton"
-						"text": "Reset"
-						addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "resetButtonActionPerformed", true ) )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) ) {
+						name: "buttonPanel"
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "fastBackButton"
+							"text": "<<"
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "backButton"
+							"text": "<"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "backButtonActionPerformed", true ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "forwardButton"
+							"text": ">"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "forwardButtonActionPerformed", true ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "fastForwardButton"
+							"minimumSize": new java.awt.Dimension( 78, 78 )
+							"text": ">>"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "fastForwardButtonActionPerformed", true ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "showPieces"
+							"text": "Show"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "showPiecesActionPerformed", true ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "layoutButton"
+							"text": "L"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "layoutButtonActionPerformed", false ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "settingsButton"
+							"text": "Settings"
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "settingsButtonActionPerformed", false ) )
+						} )
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "Center"
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "South"

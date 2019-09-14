@@ -10,6 +10,7 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Maven: com.github.bhlangonijr:chesslib:1.1.12" level="project" />
     <orderEntry type="library" name="Maven: com.pi4j:pi4j-core:1.2" level="project" />
     <orderEntry type="library" name="Maven: com.pi4j:pi4j-device:1.2" level="project" />
     <orderEntry type="library" name="Maven: com.pi4j:pi4j-gpio-extension:1.2" level="project" />

@@ -47,13 +47,9 @@ public class Stockfish {
      *
      * @param command
      */
-    public void sendCommand(String command) {
-        try {
-            processWriter.write(command + "\n");
-            processWriter.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void sendCommand(String command) throws IOException {
+        processWriter.write(command + "\n");
+        processWriter.flush();
     }
 
     /**
@@ -66,10 +62,9 @@ public class Stockfish {
      *            executed
      * @return Raw output from Stockfish
      */
-    public String getOutput(int waitTime) {
+    public String getOutput(int waitTime) throws IOException {
         StringBuffer buffer = new StringBuffer();
-        try {
-            Thread.sleep(waitTime);
+            sleep(waitTime);
             sendCommand("isready");
             while (true) {
                 String text = processReader.readLine();
@@ -78,10 +73,15 @@ public class Stockfish {
                 else
                     buffer.append(text + "\n");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         return buffer.toString();
+    }
+
+    public void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch(InterruptedException e) {
+            //do nothing
+        }
     }
 
     /**
@@ -94,7 +94,7 @@ public class Stockfish {
      *            in milliseconds
      * @return Best Move in PGN format
      */
-    public String getBestMove(String fen, int waitTime) {
+    public String getBestMove(String fen, int waitTime) throws IOException {
         sendCommand("position fen " + fen);
         sendCommand("go movetime " + waitTime);
         return getOutput(waitTime + 20).split("bestmove ")[1].split(" ")[0].substring(0,4);
@@ -112,18 +112,18 @@ public class Stockfish {
         }
     }
 
-    /**
-     * Get a list of all legal moves from the given position
-     *
-     * @param fen
-     *            Position string
-     * @return String of moves
-     */
-    public String getLegalMoves(String fen) {
-        sendCommand("position fen " + fen);
-        sendCommand("d");
-        return getOutput(0).split("Legal moves: ")[1];
-    }
+//    /**
+//     * Get a list of all legal moves from the given position
+//     *
+//     * @param fen
+//     *            Position string
+//     * @return String of moves
+//     */
+//    public String getLegalMoves(String fen) {
+//        sendCommand("position fen " + fen);
+//        sendCommand("d");
+//        return getOutput(0).split("Legal moves: ")[1];
+//    }
 
     /**
      * Draws the current state of the chess board
@@ -131,7 +131,7 @@ public class Stockfish {
      * @param fen
      *            Position string
      */
-    public void drawBoard(String fen) {
+    public void drawBoard(String fen) throws IOException {
         sendCommand("position fen " + fen);
         sendCommand("d");
 
@@ -148,13 +148,15 @@ public class Stockfish {
      * @param waitTime in milliseconds
      * @return evalScore
      */
-    public float getEvalScore(String fen, int waitTime) {
+    public float getEvalScore(String fen, int waitTime) throws IOException {
         sendCommand("position fen " + fen);
         sendCommand("go movetime " + waitTime);
 
         float evalScore = 0.0f;
         String[] dump = getOutput(waitTime + 20).split("\n");
+        System.out.println("Dump length="+dump.length);
         for (int i = dump.length - 1; i >= 0; i--) {
+            System.out.println(dump[i]);
             if (dump[i].startsWith("info depth ")) {
                 try {
                     evalScore = Float.parseFloat(dump[i].split("score cp ")[1]

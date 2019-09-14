@@ -26,6 +26,7 @@ import java.awt.*;
  *
  */
 public class ChessLR {
+    public static String stockfishPath = "./stockfish"; //if the executable isn't here, make a simlink.
     static AppFrame instance;
 
     public static void main( String[] args ) {

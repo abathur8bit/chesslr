@@ -1,5 +1,14 @@
 Contains any reference material used for the project. This includes anything related to ChessLR game or electronics of the board itself. 
 
+# Maven repository JitPack
+<https://jitpack.io/private#subscribe>
+
+Createa a maven repository based on github release.
+
+# ChessLib
+What I was trying to do with ChessBoard <https://github.com/bhlangonijr/chesslib>
+
+
 # Board
 
    a  b  c  d  e  f  g  h
