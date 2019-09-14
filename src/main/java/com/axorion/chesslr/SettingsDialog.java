@@ -18,15 +18,17 @@ public class SettingsDialog extends JDialog {
     public boolean newOnePlayer = false;
     public boolean newTwoPlayer = false;
     public boolean asBlack = false;
+    ChessPrefs prefs;
 
     public SettingsDialog(AppFrame owner) {
         super(owner);
         this.parent = owner;    //using the AppFrame for button image loading for the moment
         initComponents();
         setSize(480,780);
-        parent.setButtonImage(onePlayerButton,"button-onePlayerWhite.png");
-        parent.setButtonImage(twoPlayerButton,"button-twoPlayer.png");
+        parent.setButtonImage(onePlayerWhiteButton,"button-onePlayerWhite.png");
         parent.setButtonImage(onePlayerBlackButton,"button-onePlayerBlack.png");
+        parent.setButtonImage(twoPlayerWhiteButton,"button-twoPlayerWhite.png");
+        parent.setButtonImage(twoPlayerBlackButton,"button-twoPlayerBlack.png");
     }
 
     public SettingsDialog(Dialog owner) {
@@ -35,11 +37,20 @@ public class SettingsDialog extends JDialog {
     }
 
     /** Show the dialog and reset new game settings. */
-    public void open() {
+    public void open(ChessPrefs prefs) {
+        this.prefs = prefs;
         newOnePlayer = false;
         newTwoPlayer = false;
         asBlack = false;
+        pgnNotationCheckbox.setSelected(prefs.isPgnNotation());
+        showEvalCheckBox.setSelected(prefs.isShowEvaluation());
         super.setVisible(true);
+    }
+
+    protected void close() {
+        prefs.setPgnNotation(pgnNotationCheckbox.isSelected());
+        prefs.setShowEvaluation(showEvalCheckBox.isSelected());
+        setVisible(false);
     }
 
     public void setPgnNotation(boolean pgn) {
@@ -50,44 +61,47 @@ public class SettingsDialog extends JDialog {
         return pgnNotationCheckbox.isSelected();
     }
 
+    public boolean isShowEvaluations() {
+        return showEvalCheckBox.isSelected();
+    }
+
     public boolean isNewOnePlayer() {
-        boolean b = newOnePlayer;
-        newOnePlayer = false;
-        return b;
+        return newOnePlayer;
     }
 
     public boolean isNewTwoPlayer() {
-        boolean b = newTwoPlayer;
-        newTwoPlayer = false;
-        return b;
+        return newTwoPlayer;
     }
 
     public int getSelectedOption() {return selectedOption;}
 
-    private void okButtonActionPerformed() {
+    private void closeButtonActionPerformed() {
         selectedOption = JOptionPane.OK_OPTION;
-        setVisible(false);
+        close();
     }
 
-    private void cancelButtonActionPerformed() {
-        selectedOption = JOptionPane.CANCEL_OPTION;
-        setVisible(false);
-    }
-
-    private void onePlayerButtonActionPerformed() {
+    private void onePlayerWhiteButtonActionPerformed() {
         newOnePlayer = true;
-        setVisible(false);
-    }
-
-    private void twoPlayerButtonActionPerformed() {
-        newTwoPlayer = true;
-        setVisible(false);
+        asBlack = false;
+        close();
     }
 
     private void onePlayerBlackButtonActionPerformed() {
         newOnePlayer = true;
         asBlack = true;
-        setVisible(false);
+        close();
+    }
+
+    private void twoPlayerWhiteButtonActionPerformed() {
+        newTwoPlayer = true;
+        asBlack = false;
+        close();
+    }
+
+    private void twoPlayerBlackButtonActionPerformed() {
+        newTwoPlayer = true;
+        asBlack = true;
+        close();
     }
 
     private void initComponents() {
@@ -98,13 +112,14 @@ public class SettingsDialog extends JDialog {
         generalPanel = new JPanel();
         pgnNotationCheckbox = new JCheckBox();
         gamePanel = new JPanel();
-        onePlayerButton = new JButton();
+        onePlayerWhiteButton = new JButton();
         onePlayerBlackButton = new JButton();
-        twoPlayerButton = new JButton();
+        twoPlayerWhiteButton = new JButton();
+        twoPlayerBlackButton = new JButton();
         enginePanel = new JPanel();
-        checkBox7 = new JCheckBox();
+        showEvalCheckBox = new JCheckBox();
         buttonBar = new JPanel();
-        okButton = new JButton();
+        closeButton = new JButton();
 
         //======== this ========
         setModal(true);
@@ -139,23 +154,29 @@ public class SettingsDialog extends JDialog {
                     gamePanel.setBorder(new TitledBorder("Game"));
                     gamePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-                    //---- onePlayerButton ----
-                    onePlayerButton.setText("1");
-                    onePlayerButton.setPreferredSize(new Dimension(78, 50));
-                    onePlayerButton.addActionListener(e -> onePlayerButtonActionPerformed());
-                    gamePanel.add(onePlayerButton);
+                    //---- onePlayerWhiteButton ----
+                    onePlayerWhiteButton.setText("1W");
+                    onePlayerWhiteButton.setPreferredSize(new Dimension(78, 50));
+                    onePlayerWhiteButton.addActionListener(e -> onePlayerWhiteButtonActionPerformed());
+                    gamePanel.add(onePlayerWhiteButton);
 
                     //---- onePlayerBlackButton ----
-                    onePlayerBlackButton.setText("1 B");
+                    onePlayerBlackButton.setText("1B");
                     onePlayerBlackButton.setPreferredSize(new Dimension(78, 50));
                     onePlayerBlackButton.addActionListener(e -> onePlayerBlackButtonActionPerformed());
                     gamePanel.add(onePlayerBlackButton);
 
-                    //---- twoPlayerButton ----
-                    twoPlayerButton.setText("2");
-                    twoPlayerButton.setPreferredSize(new Dimension(78, 50));
-                    twoPlayerButton.addActionListener(e -> twoPlayerButtonActionPerformed());
-                    gamePanel.add(twoPlayerButton);
+                    //---- twoPlayerWhiteButton ----
+                    twoPlayerWhiteButton.setText("2W");
+                    twoPlayerWhiteButton.setPreferredSize(new Dimension(78, 50));
+                    twoPlayerWhiteButton.addActionListener(e -> twoPlayerWhiteButtonActionPerformed());
+                    gamePanel.add(twoPlayerWhiteButton);
+
+                    //---- twoPlayerBlackButton ----
+                    twoPlayerBlackButton.setText("2W");
+                    twoPlayerBlackButton.setPreferredSize(new Dimension(78, 50));
+                    twoPlayerBlackButton.addActionListener(e -> twoPlayerBlackButtonActionPerformed());
+                    gamePanel.add(twoPlayerBlackButton);
                 }
                 contentPanel.add(gamePanel);
 
@@ -164,9 +185,9 @@ public class SettingsDialog extends JDialog {
                     enginePanel.setBorder(new TitledBorder("Engine"));
                     enginePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
-                    //---- checkBox7 ----
-                    checkBox7.setText("Show evaluation");
-                    enginePanel.add(checkBox7);
+                    //---- showEvalCheckBox ----
+                    showEvalCheckBox.setText("Show evaluation");
+                    enginePanel.add(showEvalCheckBox);
                 }
                 contentPanel.add(enginePanel);
             }
@@ -177,11 +198,11 @@ public class SettingsDialog extends JDialog {
                 buttonBar.setBorder(new EmptyBorder(12, 0, 0, 0));
                 buttonBar.setLayout(new FlowLayout(FlowLayout.RIGHT));
 
-                //---- okButton ----
-                okButton.setText("Close");
-                okButton.setPreferredSize(new Dimension(78, 50));
-                okButton.addActionListener(e -> okButtonActionPerformed());
-                buttonBar.add(okButton);
+                //---- closeButton ----
+                closeButton.setText("Close");
+                closeButton.setPreferredSize(new Dimension(78, 50));
+                closeButton.addActionListener(e -> closeButtonActionPerformed());
+                buttonBar.add(closeButton);
             }
             dialogPane.add(buttonBar, BorderLayout.SOUTH);
         }
@@ -198,12 +219,13 @@ public class SettingsDialog extends JDialog {
     private JPanel generalPanel;
     private JCheckBox pgnNotationCheckbox;
     private JPanel gamePanel;
-    private JButton onePlayerButton;
+    private JButton onePlayerWhiteButton;
     private JButton onePlayerBlackButton;
-    private JButton twoPlayerButton;
+    private JButton twoPlayerWhiteButton;
+    private JButton twoPlayerBlackButton;
     private JPanel enginePanel;
-    private JCheckBox checkBox7;
+    private JCheckBox showEvalCheckBox;
     private JPanel buttonBar;
-    private JButton okButton;
+    private JButton closeButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables
 }

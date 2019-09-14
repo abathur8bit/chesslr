@@ -120,10 +120,9 @@ public class ChessBoardTest extends TestCase
 
     public void testDateFormatted() {
         Calendar cal = GregorianCalendar.getInstance();
-        cal.set(2019,Calendar.JANUARY,01,0,0,0);
+        cal.set(2019,Calendar.JANUARY,1,0,0,0);
         ChessBoard board = new ChessBoard();
         board.setGameDate(cal.getTime());
-        String result = board.getGameDateFormatted();
         assertEquals("2019.01.01",board.getGameDateFormatted());
     }
 
@@ -151,7 +150,7 @@ public class ChessBoardTest extends TestCase
                 "PPPP PPP"+
                 "RNBQKBNR";
         ChessBoard board = new ChessBoard();
-        board.setWhoMoves(ChessBoard.BLACK);
+        board.setWhoMoves(ChessBoard.Side.BLACK);
         board.setPosition(positionAfterE2E4);
         String expected = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"; //note that En passant target square not implemented
         System.out.println("toFen=["+board.toFen()+"]");

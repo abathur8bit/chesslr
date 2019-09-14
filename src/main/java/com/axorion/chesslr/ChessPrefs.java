@@ -25,10 +25,16 @@ import java.util.prefs.Preferences;
 public class ChessPrefs {
     static final String GAME_ID = "gameId";
     static final String WINDOW_POSITION = "window";
+    static final String PGN_NOTATION = "pgnNotation";
+    static final String SHOW_EVALUATION = "showEvaluation";
+    static final String FEN = "fen";
     AppFrame parent;
     Preferences prefs;
     boolean selectOutput = true;
     long gameId = 1000;
+    String fen;
+    boolean pgnNotation = true;
+    boolean showEvaluation = true;
     Rectangle bounds;
     File prefsFile; //lazy load in #getPrefsFile
 
@@ -55,10 +61,18 @@ public class ChessPrefs {
                     bounds = new Rectangle(Integer.parseInt(nums[0]),Integer.parseInt(nums[1]),Integer.parseInt(nums[2]),Integer.parseInt(nums[3]));
                 }
                 gameId = prefs.getLong(GAME_ID,gameId);
+                pgnNotation = prefs.getBoolean(PGN_NOTATION,pgnNotation);
+                showEvaluation = prefs.getBoolean(SHOW_EVALUATION,showEvaluation);
+                fen = prefs.get(FEN,null);
             } catch(Exception e) {
                 ChessLR.handleError("Unable to load preferences from ["+getPrefsFile().getAbsolutePath()+"]",e);
             }
         }
+    }
+
+    public void savePrefs(String fen) {
+        this.fen = fen;
+        savePrefs();
     }
 
     public void savePrefs() {
@@ -67,6 +81,11 @@ public class ChessPrefs {
                 String position = String.format("%d,%d,%d,%d",parent.getX(),parent.getY(),parent.getWidth(),parent.getHeight());
                 prefs.put(WINDOW_POSITION,position);
                 prefs.put(GAME_ID,Long.toString(gameId));
+                prefs.putBoolean(PGN_NOTATION,pgnNotation);
+                prefs.putBoolean(SHOW_EVALUATION,showEvaluation);
+                if(fen != null) {
+                    prefs.put(FEN,fen);
+                }
             }
 
             OutputStream os = new FileOutputStream(getPrefsFile());
@@ -78,6 +97,38 @@ public class ChessPrefs {
 
     public Rectangle getBounds() {
         return bounds;
+    }
+
+    public long getGameId() {
+        return gameId;
+    }
+
+    public void setGameId(long gameId) {
+        this.gameId = gameId;
+    }
+
+    public String getFen() {
+        return fen;
+    }
+
+    public void setFen(String fen) {
+        this.fen = fen;
+    }
+
+    public boolean isPgnNotation() {
+        return pgnNotation;
+    }
+
+    public void setPgnNotation(boolean pgnNotation) {
+        this.pgnNotation = pgnNotation;
+    }
+
+    public boolean isShowEvaluation() {
+        return showEvaluation;
+    }
+
+    public void setShowEvaluation(boolean showEvaluation) {
+        this.showEvaluation = showEvaluation;
     }
 }
 

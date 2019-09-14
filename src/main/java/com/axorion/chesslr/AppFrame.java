@@ -123,9 +123,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     boolean takebackCapture = false;
     GameMode mode = GameMode.PLAYING;
     GameMode previousMode = null;
-    boolean pgnNotation = true;
 
     int numberPlayers = 1;
+    ChessBoard.Side playerSide = ChessBoard.Side.WHITE;
 
     SimBoard simBoard;
     Stockfish fish = new Stockfish();
@@ -509,6 +509,10 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         updateMovesText();
         board.repaint();
         enableButtons();
+
+        if(numberPlayers == 1) {
+
+        }
 //        try {
 //            float score = fish.getEvalScore(chessBoard.toFen(),1);
 //            setMessage("Score "+score);
@@ -564,7 +568,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         if(simBoard != null)
             simBoard.reset();
         chessBoardController.resetBoard();
-        chessBoard.resetBoard();
+        chessBoard.resetBoard(playerSide);
         board.resetBoard();
         pieceUpIndex = -1;
         pieceDownIndex = -1;
@@ -689,11 +693,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void windowMoved(ComponentEvent e) {
-        getPrefs().savePrefs();
+        getPrefs().savePrefs(chessBoard.toFen());
     }
 
     private void windowResized(ComponentEvent e) {
-        getPrefs().savePrefs();
+        getPrefs().savePrefs(chessBoard.toFen());
     }
 
     private void newMenuItemActionPerformed(ActionEvent e) {
@@ -788,7 +792,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     /** Sets the text in the moves text area, taking into account what notation display mode
      * we are using.     */
     private void updateMovesText() {
-        if(pgnNotation)
+        if(getPrefs().isPgnNotation())
             movesTextArea.setText(chessBoard.getMovesPgn());
         else
             movesTextArea.setText(chessBoard.getMoveString());
@@ -815,29 +819,25 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void settingsButtonActionPerformed() {
-        settingsDialog.setPgnNotation(pgnNotation);
-        settingsDialog.open();
-        if(settingsDialog.isPgnNotation() != pgnNotation) {
-            pgnNotation = settingsDialog.isPgnNotation();
-            enableButtons();
-            updateMovesText();
-            repaint();
-        }
+        settingsDialog.open(getPrefs());
+        enableButtons();
+        updateMovesText();
+        repaint();
 
-        if(settingsDialog.isNewOnePlayer()) {
+        if(settingsDialog.isNewOnePlayer() || settingsDialog.isNewTwoPlayer()) {
+            numberPlayers = settingsDialog.isNewOnePlayer() ? 1 : 2;
+            if(settingsDialog.asBlack) {
+                playerSide = ChessBoard.Side.BLACK;
+            } else {
+                playerSide = ChessBoard.Side.WHITE;
+            }
             resetBoard();
-            numberPlayers = 1;
-            if(settingsDialog.asBlack)
-                setMessage("New 1 player as black started");
-            else
-                setMessage("New 1 player started");
-        } else if(settingsDialog.isNewTwoPlayer()) {
-            resetBoard();
-            numberPlayers = 2;
-            setMessage("New 2 player started");
+
+            setMessage("New "+numberPlayers+" player as "+playerSide+" started");
         }
         //TODO Options should be available in the settings dialog
         //  and settings should be persisted when dialog is closed.
+        getPrefs().savePrefs(chessBoard.toFen());
     }
 
     /** Set the text on the message bar. */

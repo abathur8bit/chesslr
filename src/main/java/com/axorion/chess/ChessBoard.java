@@ -32,6 +32,10 @@ import java.util.*;
  */
 public class ChessBoard
 {
+    public enum Side {
+        WHITE,
+        BLACK
+    }
     public static final int WHITE = 'w';
     public static final int BLACK = 'b';
     public static final int EMPTY_SQUARE = ' ';
@@ -46,7 +50,7 @@ public class ChessBoard
     ArrayList<String> moveCard = new ArrayList<String>();
 
     int[] gameBoard = new int[64];
-    int currentMove = WHITE;
+    Side currentMove = Side.WHITE;
     int halfMoveCounter = 0;
     int fullMoveCounter = 0;
     
@@ -64,7 +68,7 @@ public class ChessBoard
 //            "        "+
 //            "        "+
 //            "        ";
-    String boardLetters =
+    String boardLettersWhite =
             "rnbqkbnr"+
             "pppppppp"+
             "        "+
@@ -74,6 +78,16 @@ public class ChessBoard
             "PPPPPPPP"+
             "RNBQKBNR";
 
+    String boardLettersBlack =
+            "RNBKQBNR"+
+            "PPPPPPPP"+
+            "        "+
+            "        "+
+            "        "+
+            "        "+
+            "pppppppp"+
+            "rnbkqbnr";
+
     String horz = "abcdefgh";
     String vert = "87654321";
 
@@ -81,7 +95,7 @@ public class ChessBoard
     int[] validKnightMoves = {15,17};
 
     public ChessBoard() {
-        resetBoard();
+        resetBoard(Side.WHITE);
     }
 
     public void setGameId(long id) {
@@ -90,6 +104,11 @@ public class ChessBoard
 
     public long getGameId() {
         return gameId;
+    }
+
+    /** Return if it is white or black to move. */
+    public Side getCurrentMove() {
+        return currentMove;
     }
 
     /** Returns the date in PGN format of YYYY.MM.DD, zero padded. ie: 2019.01.31. */
@@ -162,7 +181,7 @@ public class ChessBoard
      * @param fen
      */
     public void setFenPosition(String fen) {
-        resetBoard();
+        resetBoard(Side.WHITE);
         castleWhiteKingSide = false;
         castleWhiteQueenSide = false;
         castleBlackKingSide = false;
@@ -195,10 +214,10 @@ public class ChessBoard
                     break;
 
                 case 1:
-                    if(ch == 'w') {
-                        currentMove = WHITE;
-                    } else if(ch == 'b') {
-                        currentMove = BLACK;
+                    if(ch == WHITE) {
+                        currentMove = Side.WHITE;
+                    } else if(ch == BLACK) {
+                        currentMove = Side.BLACK;
                     } else {
                         throw new InvalidParameterException(String.format("Color [%c] is not valid",ch));
                     }
@@ -242,12 +261,17 @@ public class ChessBoard
         return gameBoard.length;
     }
 
-    public void resetBoard() {
+    public void resetBoard(Side s) {
+        String letters;
+        if(s == Side.WHITE)
+            letters = boardLettersWhite;
+        else
+            letters = boardLettersBlack;
         for(int i=0; i<64; ++i) {
-            gameBoard[i] = boardLetters.charAt(i);
+            gameBoard[i] = letters.charAt(i);
         }
         moveCard.clear();
-        currentMove = WHITE;
+        currentMove = Side.WHITE;
         castleWhiteKingSide = true;
         castleWhiteQueenSide = true;
         castleBlackKingSide = true;
@@ -260,8 +284,8 @@ public class ChessBoard
         }
     }
 
-    public void setWhoMoves(int color) {
-        if(color == WHITE || color == BLACK) {
+    public void setWhoMoves(Side color) {
+        if(color == Side.WHITE || color == Side.BLACK) {
             currentMove = color;
         }
     }
@@ -351,8 +375,8 @@ public class ChessBoard
         int moveNumber = 0;
         for(String move : moveCard) {
             moveNumber = board.fullMoveCounter+1;
-            int currentMove = board.currentMove;
-            if(currentMove == WHITE) {
+            Side currentMove = board.currentMove;
+            if(currentMove == Side.WHITE) {
                 temp.append(moveNumber+".");
             } else {
                 temp.append(' ');
@@ -379,7 +403,7 @@ public class ChessBoard
                 temp.append(to);
             }
 
-            if(currentMove == BLACK) {
+            if(currentMove == Side.BLACK) {
                 if(moveNumber > 1) {
                     buff.append(' ');
                 }
@@ -454,10 +478,10 @@ public class ChessBoard
             if(gameBoard[toIndex] == 'p' || gameBoard[toIndex] == 'P' || isCapture) {
                 halfMoveCounter = 0;
             }
-            if(currentMove == WHITE) {
-                currentMove = BLACK;
+            if(currentMove == Side.WHITE) {
+                currentMove = Side.BLACK;
             } else {
-                currentMove = WHITE;
+                currentMove = Side.WHITE;
                 fullMoveCounter++;
             }
             return true;
@@ -533,7 +557,14 @@ public class ChessBoard
                 fen.append((char)gameBoard[i]);
             }
         }
-        fen.append(" "+(char)currentMove+" ");
+
+        //what side plays
+        fen.append(" ");
+        if(currentMove == Side.WHITE)
+            fen.append(WHITE);
+        else
+            fen.append(BLACK);
+        fen.append(" ");
 
         fen.append((castleWhiteKingSide ?"K":""));
         fen.append((castleWhiteQueenSide?"Q":""));
