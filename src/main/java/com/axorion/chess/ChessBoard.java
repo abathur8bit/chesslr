@@ -53,13 +53,13 @@ public class ChessBoard
     Side currentMove = Side.WHITE;
     int halfMoveCounter = 0;
     int fullMoveCounter = 0;
-    
+
     boolean castleWhiteKingSide = true;
     boolean castleWhiteQueenSide = true;
     boolean castleBlackKingSide = true;
     boolean castleBlackQueenSide = true;
 
-//    String boardLetters =
+    //    String boardLetters =
 //            "ppp     "+
 //            "        "+
 //            "PPP     "+
@@ -70,23 +70,23 @@ public class ChessBoard
 //            "        ";
     String boardLettersWhite =
             "rnbqkbnr"+
-            "pppppppp"+
-            "        "+
-            "        "+
-            "        "+
-            "        "+
-            "PPPPPPPP"+
-            "RNBQKBNR";
+                    "pppppppp"+
+                    "        "+
+                    "        "+
+                    "        "+
+                    "        "+
+                    "PPPPPPPP"+
+                    "RNBQKBNR";
 
     String boardLettersBlack =
             "RNBKQBNR"+
-            "PPPPPPPP"+
-            "        "+
-            "        "+
-            "        "+
-            "        "+
-            "pppppppp"+
-            "rnbkqbnr";
+                    "PPPPPPPP"+
+                    "        "+
+                    "        "+
+                    "        "+
+                    "        "+
+                    "pppppppp"+
+                    "rnbkqbnr";
 
     String horz = "abcdefgh";
     String vert = "87654321";
@@ -163,7 +163,7 @@ public class ChessBoard
      *
      * - Halfmove clock: This is the number of halfmoves since the last capture or pawn advance. This
      *   is used to determine if a draw can be claimed under the fifty-move rule.
-     *   
+     *
      * - Fullmove number: The number of the full move. It starts at 1, and is incremented after Black's
      *   move.
      *
@@ -418,7 +418,7 @@ public class ChessBoard
             if(moveNumber > 1) {
                 buff.append(' ');
             }
-            buff.append(temp.toString());
+        buff.append(temp.toString());
 
         return buff.toString();
     }
@@ -561,9 +561,9 @@ public class ChessBoard
         //what side plays
         fen.append(" ");
         if(currentMove == Side.WHITE)
-            fen.append(WHITE);
+            fen.append('w');
         else
-            fen.append(BLACK);
+            fen.append('b');
         fen.append(" ");
 
         fen.append((castleWhiteKingSide ?"K":""));
