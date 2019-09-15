@@ -195,7 +195,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         setButtonImage(layoutButton,null);
 
         buttonPanel.remove(fastBackButton);
-        buttonPanel.remove(fastForwardButton);
+//        buttonPanel.remove(fastForwardButton);
 
 
         if(boardAttached) {
@@ -243,7 +243,6 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
     /** If there is an existing move beign taken back, turn off LED's for that move. */
     private void clearTakeback() {
-        //TODO clear takeback
         waitForMove = null;
 
         if(waitForPieceUp != null) {
@@ -510,8 +509,16 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         board.repaint();
         enableButtons();
 
-        if(numberPlayers == 1) {
-
+        if(numberPlayers == 1 && !prefs.isDisableEngine()) {
+            if(chessBoard.getCurrentMove() != playerSide) {
+                try {
+                    String cpuMove = fish.getBestMove(chessBoard.toFen(),1000);
+                    chessBoard.move(cpuMove);
+                    setWaitForMove(cpuMove);
+                } catch(IOException e) {
+                    setMessage("Unable to get move from engine");
+                }
+            }
         }
 //        try {
 //            float score = fish.getEvalScore(chessBoard.toFen(),1);
@@ -538,16 +545,16 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     public void startup() {
         new Thread(() -> {
             try {
-                for(int i = 0; i < 64; ++i) {
-                    chessBoardController.led(i,true);
-                    Thread.sleep(100);
-                    chessBoardController.led(i,false);
-                }
-
-                Thread.sleep(1000);
+//                for(int i = 0; i < 64; ++i) {
+//                    chessBoardController.led(i,true);
+//                    Thread.sleep(100);
+//                    chessBoardController.led(i,false);
+//                }
+//
+//                Thread.sleep(1000);
                 for(int i=1; i<9; i++) {
                     row(i,true);
-                    Thread.sleep(100);
+                    Thread.sleep(50);
                     row(i,false);
                 }
             } catch(InterruptedException e) {
@@ -570,6 +577,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         chessBoardController.resetBoard();
         chessBoard.resetBoard(playerSide);
         board.resetBoard();
+        clearTakeback();
         pieceUpIndex = -1;
         pieceDownIndex = -1;
         isShowingPieces = false;
@@ -747,7 +755,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void fastForwardButtonActionPerformed(ActionEvent e) {
-        final String move = "a7a6";
+        final String move = "a8a7";
         recordMove(move);
         setWaitForMove(move);
     }

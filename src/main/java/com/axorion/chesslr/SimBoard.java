@@ -46,6 +46,8 @@ public class SimBoard extends JDialog implements LEDController,InputController {
         int sx = mx / (boardPanel.getWidth()/8);
         int sy = my / (boardPanel.getHeight()/8);
 
+        System.out.format("Mouse clicked at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
+
         if(boardInterface.isOccupied(sx,sy)) {
             parent.chessBoardController.pieceUp(sy*8+sx);
         } else {
@@ -87,6 +89,26 @@ public class SimBoard extends JDialog implements LEDController,InputController {
         return boardInterface.isSetLED(led);
     }
 
+    private void mousePressed(MouseEvent e) {
+        int mx = e.getX()-getInsets().left;
+        int my = e.getY()-getInsets().top;
+        int sx = mx / (boardPanel.getWidth()/8);
+        int sy = my / (boardPanel.getHeight()/8);
+
+        System.out.format("Mouse press at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
+    }
+
+    private void mouseReleased(MouseEvent e) {
+        int mx = e.getX()-getInsets().left;
+        int my = e.getY()-getInsets().top;
+        int sx = mx / (boardPanel.getWidth()/8);
+        int sy = my / (boardPanel.getHeight()/8);
+
+        System.out.format("Mouse release at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
+
+        mouseClicked(e);    //mouse click events where not going through correctly, but press and release where. just working around it for now.
+    }
+
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
         // Generated using JFormDesigner non-commercial license
@@ -95,8 +117,12 @@ public class SimBoard extends JDialog implements LEDController,InputController {
         setTitle("Sim Board");
         addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                SimBoard.this.mouseClicked(e);
+            public void mousePressed(MouseEvent e) {
+                SimBoard.this.mousePressed(e);
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                SimBoard.this.mouseReleased(e);
             }
         });
         Container contentPane = getContentPane();

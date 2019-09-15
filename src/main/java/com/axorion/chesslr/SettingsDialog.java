@@ -44,12 +44,14 @@ public class SettingsDialog extends JDialog {
         asBlack = false;
         pgnNotationCheckbox.setSelected(prefs.isPgnNotation());
         showEvalCheckBox.setSelected(prefs.isShowEvaluation());
+        disableEngineCheckBox.setSelected(prefs.isDisableEngine());
         super.setVisible(true);
     }
 
     protected void close() {
         prefs.setPgnNotation(pgnNotationCheckbox.isSelected());
         prefs.setShowEvaluation(showEvalCheckBox.isSelected());
+        prefs.setDisableEngine(disableEngineCheckBox.isSelected());
         setVisible(false);
     }
 
@@ -63,6 +65,10 @@ public class SettingsDialog extends JDialog {
 
     public boolean isShowEvaluations() {
         return showEvalCheckBox.isSelected();
+    }
+
+    public boolean isDisableEngine() {
+        return disableEngineCheckBox.isSelected();
     }
 
     public boolean isNewOnePlayer() {
@@ -118,6 +124,7 @@ public class SettingsDialog extends JDialog {
         twoPlayerBlackButton = new JButton();
         enginePanel = new JPanel();
         showEvalCheckBox = new JCheckBox();
+        disableEngineCheckBox = new JCheckBox();
         buttonBar = new JPanel();
         closeButton = new JButton();
 
@@ -188,6 +195,10 @@ public class SettingsDialog extends JDialog {
                     //---- showEvalCheckBox ----
                     showEvalCheckBox.setText("Show evaluation");
                     enginePanel.add(showEvalCheckBox);
+
+                    //---- disableEngineCheckBox ----
+                    disableEngineCheckBox.setText("Disable Engine");
+                    enginePanel.add(disableEngineCheckBox);
                 }
                 contentPanel.add(enginePanel);
             }
@@ -225,6 +236,7 @@ public class SettingsDialog extends JDialog {
     private JButton twoPlayerBlackButton;
     private JPanel enginePanel;
     private JCheckBox showEvalCheckBox;
+    private JCheckBox disableEngineCheckBox;
     private JPanel buttonBar;
     private JButton closeButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables

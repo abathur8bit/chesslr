@@ -66,6 +66,10 @@ new FormModel {
 							name: "showEvalCheckBox"
 							"text": "Show evaluation"
 						} )
+						add( new FormComponent( "javax.swing.JCheckBox" ) {
+							name: "disableEngineCheckBox"
+							"text": "Disable Engine"
+						} )
 					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "Center"

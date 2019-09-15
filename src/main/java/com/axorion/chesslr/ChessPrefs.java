@@ -27,6 +27,7 @@ public class ChessPrefs {
     static final String WINDOW_POSITION = "window";
     static final String PGN_NOTATION = "pgnNotation";
     static final String SHOW_EVALUATION = "showEvaluation";
+    static final String DISABLE_ENGINE = "disableEngine";
     static final String FEN = "fen";
     AppFrame parent;
     Preferences prefs;
@@ -35,6 +36,8 @@ public class ChessPrefs {
     String fen;
     boolean pgnNotation = true;
     boolean showEvaluation = true;
+    boolean disableEngine = false;
+
     Rectangle bounds;
     File prefsFile; //lazy load in #getPrefsFile
 
@@ -63,6 +66,7 @@ public class ChessPrefs {
                 gameId = prefs.getLong(GAME_ID,gameId);
                 pgnNotation = prefs.getBoolean(PGN_NOTATION,pgnNotation);
                 showEvaluation = prefs.getBoolean(SHOW_EVALUATION,showEvaluation);
+                showEvaluation = prefs.getBoolean(DISABLE_ENGINE,disableEngine);
                 fen = prefs.get(FEN,null);
             } catch(Exception e) {
                 ChessLR.handleError("Unable to load preferences from ["+getPrefsFile().getAbsolutePath()+"]",e);
@@ -83,6 +87,7 @@ public class ChessPrefs {
                 prefs.put(GAME_ID,Long.toString(gameId));
                 prefs.putBoolean(PGN_NOTATION,pgnNotation);
                 prefs.putBoolean(SHOW_EVALUATION,showEvaluation);
+                prefs.putBoolean(DISABLE_ENGINE,disableEngine);
                 if(fen != null) {
                     prefs.put(FEN,fen);
                 }
@@ -129,6 +134,14 @@ public class ChessPrefs {
 
     public void setShowEvaluation(boolean showEvaluation) {
         this.showEvaluation = showEvaluation;
+    }
+
+    public boolean isDisableEngine() {
+        return disableEngine;
+    }
+
+    public void setDisableEngine(boolean disableEngine) {
+        this.disableEngine = disableEngine;
     }
 }
 
