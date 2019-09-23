@@ -20,6 +20,8 @@
 
 package com.axorion.chesslr;
 
+import com.axorion.chess.ChessMove;
+
 /**
  * Thread waits a period of time for the pieces to sit still *after* a complete move,
  * then checks if a move has been completed.
@@ -61,11 +63,16 @@ public class MoveThread extends Thread {
                                 if(down == up) {
                                     up = secondUp;  //you picked up the captured piece first, so the second piece up is what we are moving from
                                 }
-                                String playersMove = parent.chessBoard.indexToBoard(up)+parent.chessBoard.indexToBoard(down);
-                                parent.recordMove(playersMove);
+                                parent.chessBoardController.led(up,false);
+                                parent.chessBoardController.led(down,false);
+                                System.out.println("Player moved piece from "+up+" to "+down);
+                                parent.recordMove(new ChessMove(parent.chessBoard,parent.chessBoard.indexToBoard(up)+parent.chessBoard.indexToBoard(down)));
+                            } else {
+                                //putting the piece down without moving it
+                                parent.chessBoardController.led(up,false);
+                                parent.chessBoardController.led(down,false);
+                                System.out.println("Player put the piece down without moving it");
                             }
-                            parent.chessBoardController.led(up,false);
-                            parent.chessBoardController.led(down,false);
 
                             //show move on display board
                             parent.showLastMove();

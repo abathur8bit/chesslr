@@ -47,7 +47,7 @@ public class ChessBoard
     String blackPieceLetters = "pnbrqk";
     String whitePieceLetters = "PNBRQK";
 
-    ArrayList<String> moveCard = new ArrayList<String>();
+    ArrayList<ChessMove> moveCard = new ArrayList<ChessMove>();
 
     int[] gameBoard = new int[64];
     Side currentMove = Side.WHITE;
@@ -351,7 +351,7 @@ public class ChessBoard
     }
 
     /** A list of all the moves in chess coordinates like "e2e3". Always has from and to coordinates. */
-    public List<String> getScoreCard() {
+    public List<ChessMove> getScoreCard() {
         return moveCard;
     }
 
@@ -373,7 +373,7 @@ public class ChessBoard
         StringBuilder buff = new StringBuilder();
         StringBuilder temp = new StringBuilder();
         int moveNumber = 0;
-        for(String move : moveCard) {
+        for(ChessMove move : moveCard) {
             moveNumber = board.fullMoveCounter+1;
             Side currentMove = board.currentMove;
             if(currentMove == Side.WHITE) {
@@ -382,8 +382,8 @@ public class ChessBoard
                 temp.append(' ');
             }
 
-            String from = move.substring(0,2);
-            String to = move.substring(2,4);
+            String from = move.getFrom();
+            String to = move.getTo();
             char pieceFrom = (char)board.pieceAt(from);
             char pieceTo = (char)board.pieceAt(to);
             if(pieceFrom>='a') {
@@ -462,38 +462,53 @@ public class ChessBoard
         return 0;
     }
 
-    /** Enter a move in the form of "e2e4". Returns if the move was valid. */
-    public boolean move(String s) {
-        if(s.length() == 4) {
-            String from = s.substring(0,2);
-            String to = s.substring(2);
-            int fromIndex = boardToIndex(from);
-            int toIndex = boardToIndex(to);
-
-            boolean isCapture = gameBoard[toIndex] != EMPTY_SQUARE;
-            gameBoard[toIndex] = gameBoard[fromIndex];
-            gameBoard[fromIndex] = EMPTY_SQUARE;
-            moveCard.add(s);
-            halfMoveCounter++;
-            if(gameBoard[toIndex] == 'p' || gameBoard[toIndex] == 'P' || isCapture) {
-                halfMoveCounter = 0;
-            }
-            if(currentMove == Side.WHITE) {
-                currentMove = Side.BLACK;
-            } else {
-                currentMove = Side.WHITE;
-                fullMoveCounter++;
-            }
-            return true;
+    public ChessMove move(ChessMove m) {
+        gameBoard[m.getToIndex()] = gameBoard[m.getFromIndex()];
+        gameBoard[m.getFromIndex()] = EMPTY_SQUARE;
+        moveCard.add(m);
+        halfMoveCounter++;
+        if(gameBoard[m.getToIndex()] == 'p' || gameBoard[m.getToIndex()] == 'P' || m.isCapture()) {
+            halfMoveCounter = 0;
         }
-        return false;
+        if(currentMove == Side.WHITE) {
+            currentMove = Side.BLACK;
+        } else {
+            currentMove = Side.WHITE;
+            fullMoveCounter++;
+        }
+        return m;
     }
 
-    public String takeback() {
+    /** Enter a move in the form of "e2e4". Returns a move object, or null if move was not valid. */
+    public ChessMove move(String s) {
+        if(s.length() >= 4) {
+            ChessMove m = new ChessMove(this,s);
+            return move(m);
+        }
+        return null;
+    }
+
+    /**
+     * Validate a move in the form "e2e4" and returns if the move is valid. A valid move is one the piece can make that
+     * doesn't leave the king in check, is a move the piece can make, like making sure a pawn isn't moved backwards, and
+     * the correct color is moved.
+     *
+     * @return true if the move is okay to make, false otherwise.
+     */
+    public boolean isValid(String ean) {
+        return isValid(new ChessMove(this,ean));
+    }
+
+    public boolean isValid(ChessMove m) {
+        return true;
+    }
+
+    public ChessMove takeback() {
         if(moveCard.size() == 0)
             return null;
         int index = moveCard.size()-1;
-        String move = moveCard.get(index);
+        ChessMove move = moveCard.get(index);
+        move.takeback();
         moveCard.remove(index);
         replayMoves();
         return move;
@@ -502,7 +517,7 @@ public class ChessBoard
     /** Replay all moves so board state is restored. */
     private void replayMoves() {
         ChessBoard replay = new ChessBoard();
-        for(String move : moveCard) {
+        for(ChessMove move : moveCard) {
             replay.move(move);
         }
         this.gameBoard = replay.gameBoard;
@@ -513,17 +528,6 @@ public class ChessBoard
         this.castleWhiteQueenSide = replay.castleWhiteQueenSide;
         this.castleBlackKingSide = replay.castleBlackKingSide;
         this.castleBlackQueenSide = replay.castleBlackQueenSide;
-    }
-
-    /**
-     * Validate a move in the form "e2e4" and returns if the move is valid. A valid move is one the piece can make that
-     * doesn't leave the king in check, is a move the piece can make, like making sure a pawn isn't moved backwards, and
-     * the correct color is moved.
-     *
-     * @return true if the move is okay to make, false otherwise.
-     */
-    public boolean validate(String move) {
-        return true;    //not yet implemented
     }
 
     public String toLetters() {

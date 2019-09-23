@@ -88,8 +88,8 @@ public class ChessBoardTest extends TestCase
         assertEquals('p',board.pieceAt("a7"));
         board.move("a2a3");
         board.move("a7a6");
-        String result = board.takeback();
-        assertEquals("a7a6",result);
+        ChessMove result = board.takeback();
+        assertEquals("a6a7",result.toEan());
         assertEquals('p',board.pieceAt("a7"));
     }
 
@@ -101,7 +101,8 @@ public class ChessBoardTest extends TestCase
         board.move("f8d6");
         board.move("d1d6");
         assertEquals("1.d4 e5 2.dxe5 Bd6 3.Qxd6",board.getMovesPgn());
-        assertEquals("d1d6",board.takeback());
+        ChessMove move = board.takeback();
+        assertEquals("d6d1",move.toEan());
         assertEquals("1.d4 e5 2.dxe5 Bd6",board.getMovesPgn());
     }
 
@@ -114,7 +115,8 @@ public class ChessBoardTest extends TestCase
         board.move("d1d6");
         board.move("c7d6");
         assertEquals("1.d4 e5 2.dxe5 Bd6 3.Qxd6 cxd6",board.getMovesPgn());
-        assertEquals("c7d6",board.takeback());
+        ChessMove move = board.takeback();
+        assertEquals("d6c7",move.toEan());
         assertEquals("1.d4 e5 2.dxe5 Bd6 3.Qxd6",board.getMovesPgn());
     }
 
@@ -220,7 +222,7 @@ public class ChessBoardTest extends TestCase
         board.move("g1f3");
         board.move("b8c6");
         board.move("b1c3");
-        List<String> moves = board.getScoreCard();
+        List<ChessMove> moves = board.getScoreCard();
         int fullMove = 0;
         for(int i=0; i<moves.size(); i++) {
             if(i%2 == 0) {

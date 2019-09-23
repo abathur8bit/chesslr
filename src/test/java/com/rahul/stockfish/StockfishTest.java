@@ -47,6 +47,7 @@ public class StockfishTest {
     }
 
     @Test
+    @Ignore
     public void testShredder() throws Exception {
 //        String shredder = "~/Desktop/DeepShredder12Mac";
         String shredder = "/Applications/Shredder/DeepShredder12.app/Contents/Resources/Java/engines/DeepShredder12Mac";
@@ -68,6 +69,7 @@ public class StockfishTest {
 //        System.out.println("score = "+score);
     }
     @Test
+    @Ignore
     public void regex() throws Exception {
         String fen = "4r3/P4ppk/3R3p/8/8/2p2P1P/3p1KP1/8 w - - 5 39";
         fish.sendCommand("position fen "+fen);
@@ -80,6 +82,7 @@ public class StockfishTest {
     }
 
     @Test
+    @Ignore
     public void score() throws Exception {
 //        String fen = "Q3r3/5ppk/R6p/8/8/2p2P1P/5KP1/3q4 b - - 0 40";
         String fen = "4r3/P4ppk/3R3p/8/8/2p2P1P/3p1KP1/8 w - - 5 39";

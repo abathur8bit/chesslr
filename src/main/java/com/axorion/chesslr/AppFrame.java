@@ -36,6 +36,7 @@
 package com.axorion.chesslr;
 
 import com.axorion.chess.ChessBoard;
+import com.axorion.chess.ChessMove;
 import com.axorion.chesslr.hardware.BoardController;
 import com.axorion.chesslr.hardware.PieceListener;
 import com.pi4j.io.gpio.GpioController;
@@ -117,14 +118,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     boolean isShowingPieces = false;
     MoveThread moveThread = new MoveThread(this);
     boolean boardAttached;
-    String waitForMove = null;
-    String waitForPieceUp = null;
-    String waitForPieceDown = null;
-    boolean takebackCapture = false;
+    ChessMove waitForMove = null;
     GameMode mode = GameMode.PLAYING;
     GameMode previousMode = null;
 
-    int numberPlayers = 1;
+    int numberPlayers = 2;
     ChessBoard.Side playerSide = ChessBoard.Side.WHITE;
 
     SimBoard simBoard;
@@ -195,7 +193,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         setButtonImage(layoutButton,null);
 
         buttonPanel.remove(fastBackButton);
-//        buttonPanel.remove(fastForwardButton);
+        buttonPanel.remove(fastForwardButton);
 
 
         if(boardAttached) {
@@ -211,10 +209,13 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
         resetBoard();
 
-        if(fish.startEngine(ChessLR.stockfishPath) == false)
-            setMessage("Unable to start stockfish");
-        else
-            setMessage("Stockfish ready");
+        if(fish.startEngine(ChessLR.stockfishPath) == false) {
+            System.out.println("Unable to start stockfish");
+        } else {
+            System.out.println("Stockfish ready");
+        }
+
+        setMessage("New "+numberPlayers+" player game started");
     }
 
     /** Start waiting for a specific move to be made.
@@ -223,36 +224,32 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
      * If a piece is lifted from the wrong square, flash that LED till the piece is put back down.
      * If a piece is dropped on the wrong square, flast that LED till the piece is lefted up.
      * */
-    private void setWaitForMove(String move) {
-        if(move != null && move.length() != 4) throw new IllegalArgumentException("Move must be in format of 'd2d3'");
-
+    private void setWaitForMove(ChessMove move) {
+        /*
+        1. Wait for source up. Wait for dest up. Wait for dest down.
+        2. Wait for Dest up. Wait for source up. Wait for dest down.
+         */
         clearTakeback();
 
         waitForMove = move;
         if(move != null) {
-            waitForPieceUp = chessBoard.from(move);
-            waitForPieceDown = chessBoard.to(move);
             mode = GameMode.WAIT_FOR_PIECE_UP;
 
-            chessBoardController.led(chessBoard.boardToIndex(chessBoard.from(move)),true);
-            chessBoardController.led(chessBoard.boardToIndex(chessBoard.to(move)),true);
-            board.setSquareStatus(chessBoard.boardToIndex(chessBoard.from(move)),BoardPanel.SquareStatus.SELECTED);
-            board.setSquareStatus(chessBoard.boardToIndex(chessBoard.to(move)),BoardPanel.SquareStatus.SELECTED);
+            chessBoardController.led(move.getFromIndex(),true);
+            chessBoardController.led(move.getToIndex(),true);
+            board.setSquareStatus(move.getFromIndex(),BoardPanel.SquareStatus.SELECTED);
+            board.setSquareStatus(move.getToIndex(),BoardPanel.SquareStatus.SELECTED);
         }
+        repaint();
     }
 
     /** If there is an existing move beign taken back, turn off LED's for that move. */
     private void clearTakeback() {
+        if(waitForMove != null) {
+            chessBoardController.led(waitForMove.getFromIndex(),false);
+            chessBoardController.led(waitForMove.getToIndex(),false);
+        }
         waitForMove = null;
-
-        if(waitForPieceUp != null) {
-            chessBoardController.led(chessBoard.boardToIndex(waitForPieceUp),false);
-            waitForPieceUp = null;
-        }
-        if(waitForPieceDown != null) {
-            chessBoardController.led(chessBoard.boardToIndex(waitForPieceDown),false);
-            waitForPieceDown = null;
-        }
     }
 
     /** Any text that is added to the moves text area will automatically scroll into view. */
@@ -377,8 +374,12 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 break;
 
             case WAIT_FOR_PIECE_UP:
-                if(!chessBoard.from(waitForMove).equals(square)) {
-                    System.out.println("Expecting "+waitForPieceUp+" but got "+square);
+                if(waitForMove.getFrom().equals(square)) {
+                    waitForMove.setFromUp(true);
+                    mode = GameMode.WAIT_FOR_PIECE_DOWN;
+                }
+                else {
+                    System.out.println("Expecting "+waitForMove.toString());
 
                     SwingUtilities.invokeLater(() -> {
                         chessBoardController.flashOn(boardIndex);
@@ -390,23 +391,47 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                         chessBoardController.flashOff(boardIndex);
                         board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.NORMAL);
                     });
-                } else {
-                    System.out.println("Got expected piece up ");
-                    mode = GameMode.WAIT_FOR_PIECE_DOWN;
-                    chessBoardController.led(boardIndex,false);
                 }
+
+//                if(!chessBoard.from(waitForMove).equals(square) && !chessBoard.to(waitForMove).equals(square)) {
+//                    System.out.println("Expecting "+waitForPieceUp+" but got "+square);
+//
+//                    SwingUtilities.invokeLater(() -> {
+//                        chessBoardController.flashOn(boardIndex);
+//                        board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.ERROR);
+//                    });
+//
+//                    JOptionPane.showMessageDialog(this,"Replace piece at "+square.toUpperCase(),"Invalid move",JOptionPane.ERROR_MESSAGE);
+//                    SwingUtilities.invokeLater(() -> {
+//                        chessBoardController.flashOff(boardIndex);
+//                        board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.NORMAL);
+//                    });
+//                } else {
+//                    System.out.println("Got expected piece up");
+//                    if(expectedUpCount > 0) {
+//                        expectedUpCount--;
+//                    }
+//                    if(expectedUpCount == 0) {
+//                        System.out.println("waiting for piece down now");
+//                        mode = GameMode.WAIT_FOR_PIECE_DOWN;
+//                        chessBoardController.led(boardIndex,false);
+//                    } else {
+//                        System.out.println("waiting for next piece up");
+//                    }
+//                }
                 break;
 
             case WAIT_FOR_PIECE_DOWN:
-                SwingUtilities.invokeLater(() -> {
-                    chessBoardController.flashOn(boardIndex);
-                    board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.ERROR);
-                });
-                JOptionPane.showMessageDialog(this,"Replace piece at "+square.toUpperCase()+".\nWaiting for piece at "+waitForPieceDown,"Invalid move",JOptionPane.ERROR_MESSAGE);
-                SwingUtilities.invokeLater(() -> {
-                    chessBoardController.flashOff(boardIndex);
-                    board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.NORMAL);
-                });
+//                SwingUtilities.invokeLater(() -> {
+//                    chessBoardController.flashOn(boardIndex);
+//                    board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.ERROR);
+//                });
+//                JOptionPane.showMessageDialog(this,"Replace piece at "+square.toUpperCase()+".\nWaiting for piece at "+waitForPieceDown,"Invalid move",JOptionPane.ERROR_MESSAGE);
+//                SwingUtilities.invokeLater(() -> {
+//                    chessBoardController.flashOff(boardIndex);
+//                    board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.NORMAL);
+//                });
+                break;
 
             default:
                 System.out.println("Ignoring piece up at "+boardIndex+" for mode "+mode);
@@ -441,7 +466,17 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 break;
 
             case WAIT_FOR_PIECE_DOWN:
-                if(!waitForPieceDown.equals(square)) {
+                if(waitForMove.getTo().equals(square)) {
+                    waitForMove.setToDown(true);
+                    if(!waitForMove.isFromDown()) { //if you havn't replaced the piece, flash for a reminder
+                        chessBoardController.blink(2,100,true,waitForMove.getFromIndex());
+                    }
+                }
+                else if(waitForMove.getFrom().equals(square)) {
+                    waitForMove.setFromDown(true);
+                }
+                else {
+                    System.out.println("Expecting "+waitForMove.toString());
                     SwingUtilities.invokeLater(() -> {
                         chessBoardController.flashOn(boardIndex);
                         board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.ERROR);
@@ -452,24 +487,45 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                         chessBoardController.flashOff(boardIndex);
                         board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.NORMAL);
                     });
-                } else {
-                    System.out.println("Got expected piece down");
-                    chessBoardController.led(boardIndex,false);
-                    if(takebackCapture) {
-                        waitForPieceDown = chessBoard.from(waitForMove);
-                        int waitIndex = chessBoard.boardToIndex(waitForPieceDown);
-                        takebackCapture = false;
-                        chessBoardController.blink(3,100,true,waitIndex);
-                        chessBoardController.led(waitIndex,true);
-                        board.setSquareStatus(waitIndex,BoardPanel.SquareStatus.WARNING);
-                    } else {
-                        board.resetBoard();
-                        showLastMove();
-                        setWaitForMove(null);
-                        mode = GameMode.PLAYING;
-                    }
-
                 }
+
+                if(waitForMove.isComplete()) {
+                    System.out.println("Move complete");
+                    board.resetBoard();
+                    showLastMove();
+                    setWaitForMove(null);
+                    mode = GameMode.PLAYING;
+                }
+
+//                if(!waitForPieceDown.equals(square)) {
+//                    SwingUtilities.invokeLater(() -> {
+//                        chessBoardController.flashOn(boardIndex);
+//                        board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.ERROR);
+//                    });
+//
+//                    JOptionPane.showMessageDialog(this,"Remove piece at "+square.toUpperCase(),"Invalid move",JOptionPane.ERROR_MESSAGE);
+//                    SwingUtilities.invokeLater(() -> {
+//                        chessBoardController.flashOff(boardIndex);
+//                        board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.NORMAL);
+//                    });
+//                } else {
+//                    System.out.println("Got expected piece down");
+//                    chessBoardController.led(boardIndex,false);
+//                    if(takebackCapture) {
+//                        waitForPieceDown = chessBoard.from(waitForMove);
+//                        int waitIndex = chessBoard.boardToIndex(waitForPieceDown);
+//                        takebackCapture = false;
+//                        chessBoardController.blink(3,100,true,waitIndex);
+//                        chessBoardController.led(waitIndex,true);
+//                        board.setSquareStatus(waitIndex,BoardPanel.SquareStatus.WARNING);
+//                    } else {
+//                        board.resetBoard();
+//                        showLastMove();
+//                        setWaitForMove(null,false);
+//                        mode = GameMode.PLAYING;
+//                    }
+//
+//                }
                 break;
 
             default:
@@ -488,31 +544,23 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
     public void showLastMove() {
         board.resetBoard();
-        java.util.List<String> scoreCard = chessBoard.getScoreCard();
+        java.util.List<ChessMove> scoreCard = chessBoard.getScoreCard();
         if(scoreCard.size()>0) {
-            String move = scoreCard.get(scoreCard.size()-1);
-            int from = chessBoard.boardToIndex(chessBoard.from(move));
-            int to = chessBoard.boardToIndex(chessBoard.to(move));
+            ChessMove move = scoreCard.get(scoreCard.size()-1);
+            int from = move.getFromIndex();
+            int to = move.getToIndex();
             board.setSquareStatus(from,BoardPanel.SquareStatus.MOVED);
             board.setSquareStatus(to,BoardPanel.SquareStatus.MOVED);
         }
     }
 
-    public void recordMove(String move) {
-//        boardValidator.loadFromFen(chessBoard.toFen());
-//        boolean legal = boardValidator.isMoveLegal(new Move(
-//                Square.fromValue(chessBoard.from(move).toUpperCase()),
-//                Square.fromValue(chessBoard.to(move).toUpperCase())),true);
-//        System.out.println("Move legal "+legal);
+    public void recordMove(ChessMove move) {
         chessBoard.move(move);
-        updateMovesText();
-        board.repaint();
-        enableButtons();
-
         if(numberPlayers == 1 && !prefs.isDisableEngine()) {
             if(chessBoard.getCurrentMove() != playerSide) {
                 try {
-                    String cpuMove = fish.getBestMove(chessBoard.toFen(),1000);
+                    String cpuEan = fish.getBestMove(chessBoard.toFen(),1000);
+                    ChessMove cpuMove = new ChessMove(chessBoard,cpuEan);
                     chessBoard.move(cpuMove);
                     setWaitForMove(cpuMove);
                 } catch(IOException e) {
@@ -520,6 +568,10 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 }
             }
         }
+        updateMovesText();
+        board.repaint();
+        enableButtons();
+
 //        try {
 //            float score = fish.getEvalScore(chessBoard.toFen(),1);
 //            setMessage("Score "+score);
@@ -531,7 +583,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
     public void enableButtons() {
         forwardButton.setEnabled(false);
-        fastForwardButton.setEnabled(true);
+        fastForwardButton.setEnabled(false);
 
         if(chessBoard.getScoreCard().size() > 0) {
             backButton.setEnabled(true);
@@ -755,9 +807,6 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void fastForwardButtonActionPerformed(ActionEvent e) {
-        final String move = "a8a7";
-        recordMove(move);
-        setWaitForMove(move);
     }
 
     private void saveGameMenuItemActionPerformed(ActionEvent event) {
@@ -771,24 +820,20 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void backButtonActionPerformed(ActionEvent e) {
-        String move = chessBoard.takeback();    //TODO If a move removed a piece, flash the square that needs the piece replaced after the move is complete.
+        ChessMove move = chessBoard.takeback();    //TODO If a move removed a piece, flash the square that needs the piece replaced after the move is complete.
         if(move != null) {
-            String to = chessBoard.from(move);  //reversing move
-            String from = chessBoard.to(move);  //reversing move
-            final String waitMove = from+to;
 
             board.resetBoard();
-            board.setSquareStatus(chessBoard.boardToIndex(from),BoardPanel.SquareStatus.SELECTED);
-            board.setSquareStatus(chessBoard.boardToIndex(to),BoardPanel.SquareStatus.SELECTED);
+            board.setSquareStatus(move.getFromIndex(),BoardPanel.SquareStatus.SELECTED);
+            board.setSquareStatus(move.getToIndex(),BoardPanel.SquareStatus.SELECTED);
 
-            if(chessBoard.pieceAt(from) != ChessBoard.EMPTY_SQUARE) {
+            if(move.isCapture()) {
                 System.out.println("Move was a capture");
-                takebackCapture = true;
             }
 
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    setWaitForMove(waitMove);
+                    setWaitForMove(move);
                     updateMovesText();
                     enableButtons();
                     board.repaint();
@@ -834,6 +879,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
         if(settingsDialog.isNewOnePlayer() || settingsDialog.isNewTwoPlayer()) {
             numberPlayers = settingsDialog.isNewOnePlayer() ? 1 : 2;
+            prefs.setPlayers(numberPlayers);
             if(settingsDialog.asBlack) {
                 playerSide = ChessBoard.Side.BLACK;
             } else {
