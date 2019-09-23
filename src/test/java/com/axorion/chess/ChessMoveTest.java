@@ -30,16 +30,7 @@ public class ChessMoveTest {
         assertEquals(board.to(ean),takeback.getFrom());
     }
     @Test
-    public void takebackSequenceCaptureYes() {
-        /*
-        from up
-        to down
-        from down
-
-        from up
-        from down
-        to down
-         */
+    public void takebackYesCaptureYes_fromDownFirst() {
         board.setFenPosition("rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
         String ean = "d4e5";
         ChessMove move = new ChessMove(board,ean);
@@ -57,6 +48,32 @@ public class ChessMoveTest {
         assertFalse(takeback.isComplete());
         takeback.setToDown(true);       //player puts the piece back where it was before move
         assertTrue(takeback.isComplete());
+    }
+    @Test
+    public void takebackYesCaptureYes_toDownFirst() {
+        board.setFenPosition("rnbqkbnr/pppp1ppp/8/4p3/3P4/8/PPP1PPPP/RNBQKBNR w KQkq - 0 2");
+        String ean = "d4e5";
+        ChessMove move = new ChessMove(board,ean);
+        board.move(move);
+        ChessMove takeback = board.takeback();
+        assertFalse(takeback.isComplete());
+        assertFalse(takeback.isFromUp());
+        assertFalse(takeback.isToUp());
+        assertFalse(takeback.isFromDown());
+        assertFalse(takeback.isToDown());
+
+        takeback.setFromUp(true);     //player picks up the piece to move back
+        assertFalse(takeback.isComplete());
+        takeback.setToDown(true);       //player puts the piece back where it was before move
+        assertFalse(takeback.isComplete());
+        takeback.setFromDown(true);     //player puts piece captured
+        assertTrue(takeback.isComplete());
+    }
+    @Test
+    public void takebackYesCaptureNo() {
+    }
+    @Test
+    public void takebackNoCaptureYes() {
     }
 
     @Test

@@ -10,7 +10,7 @@ What I was trying to do with ChessBoard <https://github.com/bhlangonijr/chesslib
 
 
 # Board
-
+```
    a  b  c  d  e  f  g  h
 8  00 01 02 03 04 05 06 07  8
 7  08 09 10 11 12 13 14 15  7
@@ -21,6 +21,19 @@ What I was trying to do with ChessBoard <https://github.com/bhlangonijr/chesslib
 2  48 49 50 51 52 53 54 55  2 
 1  56 57 58 59 60 61 62 63  1
    a  b  c  d  e  f  g  h
+```
+
+# Wait for move logic table
+Table shows how many pieces are expected to be picked up and put down for each situation. This handles computer moves,
+takebacks, and captures.
+
+```
+TAKEBACK    CAPTURE     UP  DOWN
+Y           Y           1   2
+Y           N           1   1
+N           Y           2   1
+N           N           1   1
+```
   
 # Wiring Notes #
 

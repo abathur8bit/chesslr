@@ -74,8 +74,15 @@ public class ChessMove {
         this.fromIndex = board.boardToIndex(from);
         this.toIndex = board.boardToIndex(to);
         this.takebackMove = true;
+
+        reset();
     }
 
+    /** Reset up/down states. */
+    public void reset() {
+        capturedUp = false;
+        fromDown = toDown = fromUp = toUp = false;
+    }
     public String toString() {
         StringBuilder buff = new StringBuilder(from);
         if(capture)
@@ -108,11 +115,15 @@ public class ChessMove {
 
     public boolean isComplete() {
         boolean complete = false;
-        if(capture && takebackMove) {
-            if(fromUp && toDown && fromDown) {
+        if(takebackMove && capture) {
+            if(fromUp && fromDown && toDown) {
                 complete = true;
             }
-        } else if(capture) {
+        } else if(takebackMove && !capture) {
+            if(fromUp && toDown) {
+                complete = true;
+            }
+        } else if(!takebackMove && capture) {
             if(fromUp && toUp && toDown) {
                 complete = true;
             }
