@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.io.IOException;
 
 /**
  * @author Lee Patterson
@@ -110,6 +111,46 @@ public class SettingsDialog extends JDialog {
         close();
     }
 
+    private void ledButtonActionPerformed() {
+        new Thread(() -> {
+            try
+            {
+                for(int i=0; i<64; i++) {
+                    parent.chessBoardController.led(i,true);
+                    Thread.sleep(250);
+                }
+                for(int i=0; i<64; i++) {
+                    parent.chessBoardController.led(i,false);
+                    Thread.sleep(100);
+                }
+            }
+            catch(Exception ex)
+            {
+                //do nothing
+            }
+        }).start();
+    }
+
+    private void xanimButtonActionPerformed() {
+        new Thread(() -> {
+            try {
+                parent.showMatrixAnim("x-appear.gif");
+            } catch(InterruptedException| IOException ex) {
+                //do nothing
+            }
+        }).start();
+    }
+
+    private void sweapAnimButtonActionPerformed() {
+        new Thread(() -> {
+            try {
+                parent.showMatrixAnim("sweap.gif");
+            } catch(InterruptedException| IOException ex) {
+                //do nothing
+            }
+        }).start();
+    }
+
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents
         // Generated using JFormDesigner non-commercial license
@@ -125,6 +166,10 @@ public class SettingsDialog extends JDialog {
         enginePanel = new JPanel();
         showEvalCheckBox = new JCheckBox();
         disableEngineCheckBox = new JCheckBox();
+        testPanel = new JPanel();
+        xanimButton = new JButton();
+        sweapAnimButton = new JButton();
+        ledButton = new JButton();
         buttonBar = new JPanel();
         closeButton = new JButton();
 
@@ -201,6 +246,31 @@ public class SettingsDialog extends JDialog {
                     enginePanel.add(disableEngineCheckBox);
                 }
                 contentPanel.add(enginePanel);
+
+                //======== testPanel ========
+                {
+                    testPanel.setBorder(new TitledBorder("Test"));
+                    testPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+                    //---- xanimButton ----
+                    xanimButton.setText("X");
+                    xanimButton.setPreferredSize(new Dimension(78, 50));
+                    xanimButton.addActionListener(e -> xanimButtonActionPerformed());
+                    testPanel.add(xanimButton);
+
+                    //---- sweapAnimButton ----
+                    sweapAnimButton.setText("Sweap");
+                    sweapAnimButton.setPreferredSize(new Dimension(78, 50));
+                    sweapAnimButton.addActionListener(e -> sweapAnimButtonActionPerformed());
+                    testPanel.add(sweapAnimButton);
+
+                    //---- ledButton ----
+                    ledButton.setText("LEDs");
+                    ledButton.setPreferredSize(new Dimension(78, 50));
+                    ledButton.addActionListener(e -> ledButtonActionPerformed());
+                    testPanel.add(ledButton);
+                }
+                contentPanel.add(testPanel);
             }
             dialogPane.add(contentPanel, BorderLayout.CENTER);
 
@@ -237,6 +307,10 @@ public class SettingsDialog extends JDialog {
     private JPanel enginePanel;
     private JCheckBox showEvalCheckBox;
     private JCheckBox disableEngineCheckBox;
+    private JPanel testPanel;
+    private JButton xanimButton;
+    private JButton sweapAnimButton;
+    private JButton ledButton;
     private JPanel buttonBar;
     private JButton closeButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables

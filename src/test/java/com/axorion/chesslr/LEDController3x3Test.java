@@ -18,13 +18,13 @@
 
 package com.axorion.chesslr;
 
-import com.axorion.chesslr.hardware.ChessLEDController;
+import com.axorion.chesslr.hardware.LEDController3x3;
 import junit.framework.TestCase;
 
-public class ChessLEDControllerTest extends TestCase {
+public class LEDController3x3Test extends TestCase {
 
     public void testCalcBank() {
-        ChessLEDController lc = new ChessLEDController();
+        LEDController3x3 lc = new LEDController3x3();
         assertEquals(0,lc.calcBank(0));
         assertEquals(0,lc.calcBank(1));
         assertEquals(0,lc.calcBank(5));
@@ -40,7 +40,7 @@ public class ChessLEDControllerTest extends TestCase {
     }
 
     public void testCalcBankLed() {
-        ChessLEDController lc = new ChessLEDController();
+        LEDController3x3 lc = new LEDController3x3();
         int bank = 0;
         assertEquals(0,lc.calcBankLed(bank,0));
         assertEquals(5,lc.calcBankLed(bank,5));

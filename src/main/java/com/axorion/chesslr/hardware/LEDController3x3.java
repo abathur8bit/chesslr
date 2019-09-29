@@ -51,7 +51,7 @@ import java.io.IOException;
  *   NC ---- |14       15| <--- A0
  *           +-----------+
  */
-public class ChessLEDController implements LEDController {
+public class LEDController3x3 implements LEDController {
     class FadeThread implements Runnable {
         boolean running = true;
         boolean onState = false;
@@ -150,8 +150,8 @@ public class ChessLEDController implements LEDController {
             MCP23017Pin.GPIO_B7,
     };
 
-    public ChessLEDController() {}
-    public ChessLEDController(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
+    public LEDController3x3() {}
+    public LEDController3x3(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
         init(gpio,bus);
     }
 

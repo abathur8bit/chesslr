@@ -17,8 +17,8 @@
  * ******************************************************************************/
 
 import com.axorion.chess.ChessBoard;
-import com.axorion.chesslr.hardware.ChessLEDController;
-import com.axorion.chesslr.hardware.ChessReedController;
+import com.axorion.chesslr.hardware.LEDController3x3;
+import com.axorion.chesslr.hardware.ReedController3x3;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.PinState;
@@ -34,8 +34,8 @@ import java.io.IOException;
 public class BoardApp {
     ChessBoard gameBoard;
     final GpioController gpio = GpioFactory.getInstance();
-    ChessLEDController ledController;
-    ChessReedController reedController;
+    LEDController3x3 ledController;
+    ReedController3x3 reedController;
     OLEDDisplay display;
     int gamePieceSelected=0;
     int gamePieceCaptured=0;
@@ -49,8 +49,8 @@ public class BoardApp {
 
     public BoardApp() throws I2CFactory.UnsupportedBusNumberException, IOException {
         gameBoard = new ChessBoard();
-        ledController = new ChessLEDController(gpio,I2CBus.BUS_1);
-        reedController = new ChessReedController(gpio,I2CBus.BUS_1);
+        ledController = new LEDController3x3(gpio,I2CBus.BUS_1);
+        reedController = new ReedController3x3(gpio,I2CBus.BUS_1);
         reedController.addListener(new GpioPinListenerDigital() {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 boolean state = event.getState() == PinState.HIGH ? false:true;

@@ -200,7 +200,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         if(boardAttached) {
             gpio = GpioFactory.getInstance();
             initHardware();
-            chessBoardController.set3x3Maps();
+//            chessBoardController.set3x3Maps();
         } else {
             simBoard = new SimBoard(this);
             chessBoardController = new BoardController(simBoard,simBoard);
@@ -320,9 +320,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         resetBoard();
         setVisible(true);
         settingsDialog = new SettingsDialog(this);  //construct here, so correct window size and position can be determined.
-        SwingUtilities.invokeLater(() -> {
-            startup();
-        });
+//        SwingUtilities.invokeLater(() -> {
+//            startup();
+//        });
 
         if(!boardAttached) {
             simBoard.setLocation(getX()+getWidth(),getY());
@@ -429,7 +429,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.ERROR);
         });
 
-        JOptionPane.showMessageDialog(this,"Replace piece at "+square.toUpperCase(),"Invalid move",JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this,square.toUpperCase()+" is wrong. Expecting "+expectedMove.toEan()+".","Invalid move",JOptionPane.ERROR_MESSAGE);
         SwingUtilities.invokeLater(() -> {
             chessBoardController.flashOff(boardIndex);
             board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.NORMAL);
@@ -555,13 +555,15 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         board.repaint();
         enableButtons();
 
-//        try {
-//            float score = fish.getEvalScore(chessBoard.toFen(),1);
-//            setMessage("Score "+score);
-//        } catch(IOException e) {
-//            setMessage("Stockfish restarted");
-//            fish.startEngine(ChessLR.stockfishPath);
-//        }
+        if(getPrefs().isShowEvaluation()) {
+            try {
+                float score = fish.getEvalScore(chessBoard.toFen(),1);
+                setMessage("Score "+score);
+            } catch(IOException e) {
+                setMessage("Stockfish restarted");
+                fish.startEngine(ChessLR.stockfishPath);
+            }
+        }
     }
 
     public void enableButtons() {
@@ -580,23 +582,49 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     public void startup() {
         new Thread(() -> {
             try {
-//                for(int i = 0; i < 64; ++i) {
-//                    chessBoardController.led(i,true);
-//                    Thread.sleep(100);
-//                    chessBoardController.led(i,false);
-//                }
-//
-//                Thread.sleep(1000);
-                for(int i=1; i<9; i++) {
-                    row(i,true);
-                    Thread.sleep(50);
-                    row(i,false);
-                }
-            } catch(InterruptedException e) {
+                showMatrixAnim("sweap.gif");
+            } catch(InterruptedException|IOException e) {
                 //do nothing
             }
         }).start();
     }
+
+    public void showMatrixAnim(String filename) throws InterruptedException,IOException {
+        for(int i=0; i<64; i++) {
+            chessBoardController.led(i,false);
+        }
+        String target = "/"+filename;
+        URL url = AppFrame.class.getResource(target);
+        GifDecoder gif = new GifDecoder();
+        gif.read(url.openStream());
+        int n = gif.getFrameCount();
+        for(int i=0; i<n; i++) {
+            BufferedImage frame = gif.getFrame(i);
+            int delay = gif.getDelay(i);
+            showFrame(frame);
+            Thread.sleep(delay);
+        }
+        for(int i=0; i<64; i++) {
+            chessBoardController.led(i,false);
+        }
+    }
+
+    public void showFrame(BufferedImage frame) {
+        int MASK_RGB    = 0x00FFFFFF;
+        boolean ON = true;
+        boolean OFF = false;
+
+        int w = frame.getWidth();
+        int h = frame.getHeight();
+        for(int y=0; y<h; y++) {
+            for(int x=0; x<w; x++) {
+                int rgb = frame.getRGB(x,y);
+                boolean on = (rgb&MASK_RGB) > 0;
+                chessBoardController.led(y*8+x,on);
+            }
+        }
+    }
+
 
     private void row(int r,boolean on){
         int start = (r-1)*8;
@@ -678,18 +706,18 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     public Image loadImage(String filename) {
         String target = "/"+filename;
         URL url = AppFrame.class.getResource(target);
-        System.out.println("ImageUtil filename="+target+" url="+url);
+//        System.out.println("ImageUtil filename="+target+" url="+url);
         if(url == null) {
             return createPlaceholder(128,128,Color.RED);
         }
         Image im = Toolkit.getDefaultToolkit().getImage(url);
         mediaTracker.addImage(im,0);
-        System.out.println("Waiting for "+filename+" to load");
+//        System.out.println("Waiting for "+filename+" to load");
         try {
             long start = System.currentTimeMillis();
             mediaTracker.waitForAll();
             long end = System.currentTimeMillis();
-            System.out.println(filename+" loaded in "+(end-start)+"ms");
+//            System.out.println(filename+" loaded in "+(end-start)+"ms");
         } catch(InterruptedException e) {
             //ignore
         }
@@ -840,25 +868,31 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     protected void showLayout(boolean show) {
-        if(show)
+        if(waitForMove != null)
+            return; //don't change layout mode if in the middle of a move
+
+        if(show) {
+            previousMode = mode;
             mode = GameMode.SHOW_LAYOUT;
-        else
-            mode = GameMode.PLAYING;
+        } else if(previousMode != null) {
+            mode = previousMode;
+            previousMode = null;
+        }
 
         if(mode == GameMode.SHOW_LAYOUT) {
-            layoutButton.setBackground(buttonDefaultColor);
-            layoutButton.setSelected(false);
-            for(int i = 0; i < 64; i++) {
-                chessBoardController.led(i,false);
-            }
-            showLastMove();
-        } else {
             layoutButton.setBackground(buttonSelectedColor);
             layoutButton.setSelected(true);
             for(int i = 0; i < 64; i++) {
                 boolean on = chessBoard.pieceAt(i) == ChessBoard.EMPTY_SQUARE ? false : true;
                 chessBoardController.led(i,on);
             }
+        } else {
+            layoutButton.setBackground(buttonDefaultColor);
+            layoutButton.setSelected(false);
+            for(int i = 0; i < 64; i++) {
+                chessBoardController.led(i,false);
+            }
+            showLastMove();
         }
     }
 

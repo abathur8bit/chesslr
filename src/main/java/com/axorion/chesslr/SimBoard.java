@@ -46,7 +46,7 @@ public class SimBoard extends JDialog implements LEDController,InputController {
         int sx = mx / (boardPanel.getWidth()/8);
         int sy = my / (boardPanel.getHeight()/8);
 
-        System.out.format("Mouse clicked at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
+//        System.out.format("Mouse clicked at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
 
         if(boardInterface.isOccupied(sx,sy)) {
             parent.chessBoardController.pieceUp(sy*8+sx);
@@ -95,7 +95,7 @@ public class SimBoard extends JDialog implements LEDController,InputController {
         int sx = mx / (boardPanel.getWidth()/8);
         int sy = my / (boardPanel.getHeight()/8);
 
-        System.out.format("Mouse press at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
+//        System.out.format("Mouse press at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
     }
 
     private void mouseReleased(MouseEvent e) {
@@ -104,7 +104,7 @@ public class SimBoard extends JDialog implements LEDController,InputController {
         int sx = mx / (boardPanel.getWidth()/8);
         int sy = my / (boardPanel.getHeight()/8);
 
-        System.out.format("Mouse release at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
+//        System.out.format("Mouse release at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
 
         mouseClicked(e);    //mouse click events where not going through correctly, but press and release where. just working around it for now.
     }

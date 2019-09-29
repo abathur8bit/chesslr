@@ -65,7 +65,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *           +-----------+
  *</pre>
  */
-public class ChessReedController implements GpioPinListenerDigital,InputController {
+public class ReedController8x8 implements GpioPinListenerDigital,InputController {
     static final int BANK_SIZE = 16;
     static final int BASE_ADDRESS = 0x21;
 
@@ -106,8 +106,8 @@ public class ChessReedController implements GpioPinListenerDigital,InputControll
     AtomicBoolean[] debouncing = new AtomicBoolean[64];
     long BOUNCE_DELAY = 100;
 
-    public ChessReedController() {}
-    public ChessReedController(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
+    public ReedController8x8() {}
+    public ReedController8x8(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
         init(gpio,bus);
     }
 

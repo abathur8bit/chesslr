@@ -71,6 +71,30 @@ new FormModel {
 							"text": "Disable Engine"
 						} )
 					} )
+					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {
+						"alignment": 0
+					} ) {
+						name: "testPanel"
+						"border": new javax.swing.border.TitledBorder( "Test" )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "xanimButton"
+							"text": "X"
+							"preferredSize": #Dimension0
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "xanimButtonActionPerformed", false ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "sweapAnimButton"
+							"text": "Sweap"
+							"preferredSize": #Dimension0
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "sweapAnimButtonActionPerformed", false ) )
+						} )
+						add( new FormComponent( "javax.swing.JButton" ) {
+							name: "ledButton"
+							"text": "LEDs"
+							"preferredSize": #Dimension0
+							addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "ledButtonActionPerformed", false ) )
+						} )
+					} )
 				}, new FormLayoutConstraints( class java.lang.String ) {
 					"value": "Center"
 				} )

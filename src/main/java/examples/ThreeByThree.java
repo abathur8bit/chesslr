@@ -18,8 +18,8 @@
 
 package examples;
 
-import com.axorion.chesslr.hardware.ChessLEDController;
-import com.axorion.chesslr.hardware.ChessReedController;
+import com.axorion.chesslr.hardware.LEDController3x3;
+import com.axorion.chesslr.hardware.ReedController3x3;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
@@ -32,8 +32,8 @@ import java.io.IOException;
 
 public class ThreeByThree {
     final GpioController gpio = GpioFactory.getInstance();
-    ChessLEDController ledController;
-    ChessReedController reedController;
+    LEDController3x3 ledController;
+    ReedController3x3 reedController;
     OLEDDisplay display;
     public static void main(String[] args) throws Exception {
         ThreeByThree app = new ThreeByThree();
@@ -42,8 +42,8 @@ public class ThreeByThree {
     }
 
     public ThreeByThree() throws Exception {
-        ledController = new ChessLEDController(gpio,I2CBus.BUS_1);
-        reedController = new ChessReedController(gpio,I2CBus.BUS_1);
+        ledController = new LEDController3x3(gpio,I2CBus.BUS_1);
+        reedController = new ReedController3x3(gpio,I2CBus.BUS_1);
         reedController.addListener(new GpioPinListenerDigital() {
             public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
                 int ledIndex = reedController.findPinIndex(event.getPin().getPin());

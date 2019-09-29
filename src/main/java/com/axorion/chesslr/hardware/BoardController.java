@@ -106,21 +106,23 @@ public class BoardController {
         if(gpio == null) {
             // use simulated board
         } else {
-            ledController = new ChessLEDController(gpio,bus);
-            reedController = new ChessReedController(gpio,bus);
+            ledController = new LEDController8x8(gpio,bus);
+//            reedController = new ReedController3x3(gpio,bus);
         }
-        reedController.addListener(new GpioPinListenerDigital() {
-            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                final Pin pin = event.getPin().getPin();
-                final int index = reedController.findPinIndex(pin);
+        if(reedController != null) {
+            reedController.addListener(new GpioPinListenerDigital() {
+                public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+                    final Pin pin = event.getPin().getPin();
+                    final int index = reedController.findPinIndex(pin);
 
-                if(reedController.stateIsDown(event.getState())) {
-                    pieceDown(index);
-                } else {
-                    pieceUp(index);
+                    if(reedController.stateIsDown(event.getState())) {
+                        pieceDown(index);
+                    } else {
+                        pieceUp(index);
+                    }
                 }
-            }
-        });
+            });
+        }
         flashThread = new FlashThread(ledController);
         flashThread.start();
     }
