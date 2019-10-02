@@ -6,9 +6,9 @@ package com.axorion.chesslr;
 
 import com.axorion.chesslr.hardware.InputController;
 import com.axorion.chesslr.hardware.LEDController;
+import com.axorion.chesslr.hardware.PieceListener;
 import com.pi4j.io.gpio.Pin;
 import com.pi4j.io.gpio.PinState;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
 import javax.swing.*;
 import java.awt.*;
@@ -59,7 +59,7 @@ public class SimBoard extends JDialog implements LEDController,InputController {
     }
 
     @Override
-    public void addListener(GpioPinListenerDigital listener) {
+    public void addListener(PieceListener listener) {
 
     }
 

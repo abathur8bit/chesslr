@@ -82,19 +82,11 @@ public class LEDControllerRow implements LEDController {
             bankAddress[i] = baseAddress+i;
         }
 
-        if(baseAddress == 0x21) {
-            System.out.println("bank 0x21");
-        }
         for(int i=0; i<BANK_SIZE; i++) {
             String name = baseAddress+"-"+pins[i].toString();
             System.out.printf("pin %02d name [%s]\n",i,name);
             out[i] = gpio.provisionDigitalOutputPin(provider,pins[i],name,PinState.LOW);
         }
-
-//        for(int i=0; i<BANK_SIZE; i++) {
-//            led(i,true);
-//            led(i,false);
-//        }
     }
 
     @Override

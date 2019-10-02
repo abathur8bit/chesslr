@@ -6,9 +6,6 @@ package com.axorion.chesslr.hardware;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.Pin;
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 
@@ -60,15 +57,15 @@ public class BoardTesterFrame extends JFrame {
        log(String.format("Using bus %d\nmaxLed %d\nled address 0x%02X (%d) led bank %d\ninput address 0x%02X (%d) input bank %d",bus,maxLed,address,address,bank,inputAddress,inputAddress,inputBank));
        ledController = new LEDTesterController(gpio,bus,address,bank);
        inputController = new InputTesterController(gpio,bus,inputAddress,inputBank);
-       inputController.addListener(new GpioPinListenerDigital() {
-            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-
-                final Pin pin = event.getPin().getPin();
-                final int index = inputController.findPinIndex(pin);
-
-                inputCheckboxes[index].setSelected(inputController.stateIsDown(event.getState()));
-            }
-        });
+//       inputController.addListener(new GpioPinListenerDigital() {
+//            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+//
+//                final Pin pin = event.getPin().getPin();
+//                final int index = inputController.findPinIndex(pin);
+//
+//                inputCheckboxes[index].setSelected(inputController.stateIsDown(event.getState()));
+//            }
+//        });
 
     }
 

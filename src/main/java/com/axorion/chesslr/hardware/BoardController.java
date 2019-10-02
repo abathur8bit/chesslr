@@ -21,9 +21,6 @@
 package com.axorion.chesslr.hardware;
 
 import com.pi4j.io.gpio.GpioController;
-import com.pi4j.io.gpio.Pin;
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CFactory;
 
 import java.io.IOException;
@@ -50,7 +47,7 @@ import java.util.ArrayList;
  *    a  b  c  d  e  f  g  h
  * </pre>
  */
-public class BoardController {
+public class BoardController implements PieceListener {
     LEDController ledController;
     InputController reedController;
     ArrayList<PieceListener> pieceListeners = new ArrayList<PieceListener>();
@@ -107,29 +104,13 @@ public class BoardController {
             // use simulated board
         } else {
             ledController = new LEDController8x8(gpio,bus);
-//            reedController = new ReedController3x3(gpio,bus);
+            reedController = new ReedController8x8(gpio,bus);
         }
         if(reedController != null) {
-            reedController.addListener(new GpioPinListenerDigital() {
-                public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                    final Pin pin = event.getPin().getPin();
-                    final int index = reedController.findPinIndex(pin);
-
-                    if(reedController.stateIsDown(event.getState())) {
-                        pieceDown(index);
-                    } else {
-                        pieceUp(index);
-                    }
-                }
-            });
+            reedController.addListener(this);
         }
         flashThread = new FlashThread(ledController);
         flashThread.start();
-    }
-
-    public void set3x3Maps() {
-        boardToPinMap = boardToPinMap3x3;
-        pinToBoardMap = pinToBoardMap3x3;
     }
 
     public void flashOn(int ledIndex) {

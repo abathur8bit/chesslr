@@ -22,8 +22,6 @@ import com.axorion.chesslr.hardware.LEDController3x3;
 import com.axorion.chesslr.hardware.ReedController3x3;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
 import oled.Font;
 import oled.OLEDDisplay;
@@ -44,25 +42,25 @@ public class ThreeByThree {
     public ThreeByThree() throws Exception {
         ledController = new LEDController3x3(gpio,I2CBus.BUS_1);
         reedController = new ReedController3x3(gpio,I2CBus.BUS_1);
-        reedController.addListener(new GpioPinListenerDigital() {
-            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                int ledIndex = reedController.findPinIndex(event.getPin().getPin());
-                boolean pieceDown = reedController.stateIsDown(event.getState());
-                ledController.led(ledIndex,pieceDown);
-
-//                System.out.println("application gpio pin pieceDown change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
-//                if(pieceDown) {
-//                    display.clear();
-//                    showBoard();
-//                    final int x=9;
-//                    textxy("B00:00:00",x,0);
-//                    textxy("W00:00:00",x,1);
-//                    textxy("led="+ledIndex,x,7);
-//                    updateDisplay();
-//                }
-
-            }
-        });
+//        reedController.addListener(new GpioPinListenerDigital() {
+//            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+//                int ledIndex = reedController.findPinIndex(event.getPin().getPin());
+//                boolean pieceDown = reedController.stateIsDown(event.getState());
+//                ledController.led(ledIndex,pieceDown);
+//
+////                System.out.println("application gpio pin pieceDown change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
+////                if(pieceDown) {
+////                    display.clear();
+////                    showBoard();
+////                    final int x=9;
+////                    textxy("B00:00:00",x,0);
+////                    textxy("W00:00:00",x,1);
+////                    textxy("led="+ledIndex,x,7);
+////                    updateDisplay();
+////                }
+//
+//            }
+//        });
         display = new OLEDDisplay(I2CBus.BUS_1,0x3D);
 //        display.clear();
     }

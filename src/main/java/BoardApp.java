@@ -21,9 +21,6 @@ import com.axorion.chesslr.hardware.LEDController3x3;
 import com.axorion.chesslr.hardware.ReedController3x3;
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.PinState;
-import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 import oled.Font;
@@ -51,31 +48,31 @@ public class BoardApp {
         gameBoard = new ChessBoard();
         ledController = new LEDController3x3(gpio,I2CBus.BUS_1);
         reedController = new ReedController3x3(gpio,I2CBus.BUS_1);
-        reedController.addListener(new GpioPinListenerDigital() {
-            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
-                boolean state = event.getState() == PinState.HIGH ? false:true;
-                int ledIndex = reedController.findPinIndex(event.getPin().getPin());
-
-//                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
-
-                if(state) {
-                    pieceDown(ledIndex);
-                } else {
-                    pieceUp(ledIndex);
-                }
-
+//        reedController.addListener(new GpioPinListenerDigital() {
+//            public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
+//                boolean state = event.getState() == PinState.HIGH ? false:true;
+//                int ledIndex = reedController.findPinIndex(event.getPin().getPin());
+//
+////                System.out.println("application gpio pin state change: " + event.getPin() + " = " + event.getState() + " led="+ledIndex);
+//
 //                if(state) {
-//                    display.clear();
-//                    showBoard();
-//                    final int x=9;
-//                    textxy("B00:00:00",x,0);
-//                    textxy("W00:00:00",x,1);
-//                    textxy("led="+ledIndex,x,7);
-//                    updateDisplay();
+//                    pieceDown(ledIndex);
+//                } else {
+//                    pieceUp(ledIndex);
 //                }
-
-            }
-        });
+//
+////                if(state) {
+////                    display.clear();
+////                    showBoard();
+////                    final int x=9;
+////                    textxy("B00:00:00",x,0);
+////                    textxy("W00:00:00",x,1);
+////                    textxy("led="+ledIndex,x,7);
+////                    updateDisplay();
+////                }
+//
+//            }
+//        });
         display = new OLEDDisplay(I2CBus.BUS_1,0x3D);
 
     }

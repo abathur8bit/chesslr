@@ -320,9 +320,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         resetBoard();
         setVisible(true);
         settingsDialog = new SettingsDialog(this);  //construct here, so correct window size and position can be determined.
-//        SwingUtilities.invokeLater(() -> {
-//            startup();
-//        });
+        SwingUtilities.invokeLater(() -> {
+            startup();
+        });
 
         if(!boardAttached) {
             simBoard.setLocation(getX()+getWidth(),getY());

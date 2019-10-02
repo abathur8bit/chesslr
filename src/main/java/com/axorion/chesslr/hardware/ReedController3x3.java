@@ -126,9 +126,9 @@ public class ReedController3x3 implements GpioPinListenerDigital,InputController
         }
     }
 
-    public void addListener(GpioPinListenerDigital listener) {
-        listeners.add(listener);
-        gpio.addListener(this,pinInput);
+    public void addListener(PieceListener listener) {
+//        listeners.add(listener);
+//        gpio.addListener(this,pinInput);
     }
 
     public void handleGpioPinDigitalStateChangeEvent(final GpioPinDigitalStateChangeEvent event) {

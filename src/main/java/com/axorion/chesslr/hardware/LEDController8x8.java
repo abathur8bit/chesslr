@@ -49,6 +49,7 @@ import java.io.IOException;
 public class LEDController8x8 implements LEDController {
 
     static final int BASE_ADDRESS = 0x20;
+    static final int NUM_ROWS = 8;
 
     GpioController gpio;
     LEDControllerRow[] ledControllerRows;
@@ -62,14 +63,14 @@ public class LEDController8x8 implements LEDController {
     public void init(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
         this.gpio = gpio;
         this.bus = bus;
-        ledControllerRows = new LEDControllerRow[8];
-        for(int i=0; i<8; i++) {
+        ledControllerRows = new LEDControllerRow[NUM_ROWS];
+        for(int i=0; i<NUM_ROWS; i++) {
             ledControllerRows[i] = new LEDControllerRow(gpio,bus,BASE_ADDRESS+i);
-            try {
-                Thread.sleep(100);
-            } catch(InterruptedException e) {
-                //do nothing
-            }
+//            try {
+//                Thread.sleep(100);
+//            } catch(InterruptedException e) {
+//                //do nothing
+//            }
         }
     }
 

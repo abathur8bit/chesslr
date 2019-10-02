@@ -58,8 +58,8 @@ public class InputTesterController implements InputController {
         }
     }
 
-    public void addListener(GpioPinListenerDigital listener) {
-        gpio.addListener(listener,pinInput);
+    public void addListener(PieceListener listener) {
+//        gpio.addListener(listener,pinInput);
     }
 
 //    public void handleGpioPinDigitalStateChangeEvent(final GpioPinDigitalStateChangeEvent event) {
