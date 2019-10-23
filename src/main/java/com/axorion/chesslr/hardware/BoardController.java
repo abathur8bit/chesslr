@@ -70,6 +70,9 @@ public class BoardController implements PieceListener {
             8,9,10,
             16,17,18}; //top left
 
+    /*
+    d4/e4
+     */
     int[] boardToPinMap = {
              0, 1, 2, 3, 4, 5, 6, 7,
              8, 9,10,11,12,13,14,15,
@@ -130,8 +133,13 @@ public class BoardController implements PieceListener {
     }
 
     public void led(int squareIndex,boolean on) {
-        ledController.led(mapToPin(squareIndex),on);
-
+        if(squareIndex == -1) {
+            for(int i = 0; i < 64; i++) {
+                ledController.led(mapToPin(i),on);
+            }
+        } else {
+            ledController.led(mapToPin(squareIndex),on);
+        }
     }
 
     /** Return if an LED is on at the specified index. */
@@ -170,16 +178,18 @@ public class BoardController implements PieceListener {
     }
 
     private int mapToBoard(int pinIndex) {
+//        return pinIndex;
 //        int[] pinToBoardMap = {3,4,5,11,12,13,19,20,21}; //upper middle
 //        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42}; //bottom leff
-        if(pinIndex>pinToBoardMap.length) {
-            return 0;
-        }
+//        if(pinIndex>pinToBoardMap.length) {
+//            return 0;
+//        }
         return pinToBoardMap[pinIndex];
     }
 
     /** Map a board index (0-63) to the correct pin #. */
     private int mapToPin(int boardIndex) {
+//        return boardIndex;
         //upper middle
 //        int[] boardToPinMap = {
 //                0,0,0,0,1,2,0,0,
@@ -216,10 +226,10 @@ public class BoardController implements PieceListener {
                         led(boardIndex,false);
                         Thread.sleep(delay);
                     }
-                    led(boardIndex,leaveOn);
                 } catch(InterruptedException e) {
-                    led(boardIndex,leaveOn);
+                    //do nothing
                 }
+            led(boardIndex,leaveOn);
             }).start();
     }
 }
