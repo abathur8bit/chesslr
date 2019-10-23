@@ -46,6 +46,9 @@ public class StockfishTest {
         fish.stopEngine();
     }
 
+//    @Test
+//    public void test
+
     @Test
     @Ignore
     public void testShredder() throws Exception {

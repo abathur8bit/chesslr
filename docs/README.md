@@ -1,5 +1,9 @@
 Contains any reference material used for the project. This includes anything related to ChessLR game or electronics of the board itself. 
 
+# FEN, PGN, EAN
+https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
+https://en.wikipedia.org/wiki/Portable_Game_Notation
+
 # Maven repository JitPack
 <https://jitpack.io/private#subscribe>
 

@@ -9,7 +9,7 @@ public class AppFrameTest {
     @Test
     @Ignore
     public void testGetFilename() throws Exception {
-        AppFrame f = new AppFrame("xxx",false);
+        AppFrame f = new AppFrame("xxx",false,750);
 
         String filename = f.getFilename();
         assertEquals("games/ChessLR-01000.txt",filename);

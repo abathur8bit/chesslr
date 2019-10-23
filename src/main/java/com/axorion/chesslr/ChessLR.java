@@ -30,13 +30,18 @@ public class ChessLR {
     static AppFrame instance;
 
     public static void main( String[] args ) {
+        long waitTime = 750;
         boolean boardAttached = true;
-        if(args.length>0 && args[0].equals("-b")) {
-            boardAttached = false;
+        for(int i = 0; i < args.length; i++) {
+            if(args[i].equals("-b"))
+                boardAttached = false;
+            else if(args[i].equals("--waittime")) {
+                waitTime = Integer.parseInt(args[++i]);
+            }
         }
         try {
 
-            instance = new AppFrame("ChessLR",boardAttached);
+            instance = new AppFrame("ChessLR",boardAttached,waitTime);
             if(instance.prefs.getBounds() != null) {
                 Rectangle maxBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
                 if(maxBounds.contains(instance.prefs.getBounds())) {

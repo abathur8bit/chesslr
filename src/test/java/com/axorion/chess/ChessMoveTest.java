@@ -18,6 +18,17 @@ public class ChessMoveTest {
     public void tearDown() throws Exception {
     }
 
+    @Test
+    public void testWhiteCastleShortValid() {
+        board.setFenPosition("rnbqk2r/ppppbppp/4pn2/8/8/4PN2/PPPPBPPP/RNBQK2R w KQkq - 2 4");
+        String ean = "e1g1";
+        ChessMove move = new ChessMove(board,ean);
+        assertTrue(move.isCastleKingSide());
+        assertFalse(move.isCapture());
+        assertFalse(move.isTakebackMove());
+        assertFalse(move.isPromoted());
+    }
+
     /** Ensure from and to are reversed. */
     @Test
     public void takebackFromTo() {

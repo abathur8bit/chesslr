@@ -30,6 +30,8 @@ public class ChessMove {
     protected char capturedPiece = ChessBoard.EMPTY_SQUARE;
     protected char movedPiece = ChessBoard.EMPTY_SQUARE;
     protected char promotedTo = 0;
+    protected boolean isCastleQueenSide = false;
+    protected boolean isCastleKingSide = false;
     protected boolean takebackMove = false;
 
     protected boolean capturedUp = false;
@@ -53,6 +55,8 @@ public class ChessMove {
         this.movedPiece = (char)board.pieceAt(from);
         this.takebackMove = false;
 
+        checkForCastle();
+
         if(board.pieceAt(to) != ChessBoard.EMPTY_SQUARE) {
             capture = true;
             capturedPiece = (char)board.pieceAt(to);
@@ -60,6 +64,22 @@ public class ChessMove {
 
         if(ean.length() == 5) {
             promotedTo = ean.charAt(4);
+        }
+    }
+
+    protected void checkForCastle() {
+        if(movedPiece == 'K') {
+            if(fromIndex == 60 && toIndex == 62 && board.castleWhiteKingSide) {
+                isCastleKingSide = true;
+            } else if(fromIndex == 60 && toIndex == 58 && board.castleWhiteQueenSide) {
+                isCastleQueenSide = true;
+            }
+        } else if(movedPiece == 'k') {
+            if(fromIndex == 4 && toIndex == 2 && board.castleBlackQueenSide) {
+                isCastleQueenSide = true;
+            } else if(fromIndex == 4 && toIndex == 6 && board.castleBlackKingSide) {
+                isCastleKingSide = true;
+            }
         }
     }
 
@@ -201,5 +221,23 @@ public class ChessMove {
 
     public boolean isTakebackMove() {
         return takebackMove;
+    }
+
+    /** Castle long. */
+    public boolean isCastleQueenSide() {
+        return isCastleQueenSide;
+    }
+
+    public void setCastleQueenSide(boolean castleQueenSide) {
+        isCastleQueenSide = castleQueenSide;
+    }
+
+    /** Castle short. */
+    public boolean isCastleKingSide() {
+        return isCastleKingSide;
+    }
+
+    public void setCastleKingSide(boolean castleKingSide) {
+        isCastleKingSide = castleKingSide;
     }
 }

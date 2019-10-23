@@ -83,7 +83,7 @@ public class LEDControllerRow implements LEDController {
         }
 
         for(int i=0; i<BANK_SIZE; i++) {
-            String name = baseAddress+"-"+pins[i].toString();
+            String name = String.format("OUTPUT-%02X-%s",baseAddress,pins[i].toString());
             System.out.printf("pin %02d name [%s]\n",i,name);
             out[i] = gpio.provisionDigitalOutputPin(provider,pins[i],name,PinState.LOW);
         }

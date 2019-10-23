@@ -59,7 +59,9 @@ public class ReedControllerRow  implements GpioPinListenerDigital,InputControlle
 
     protected void initPins() {
         for(int i=0; i<BANK_SIZE; ++i) {
-            pinInput[i] = gpio.provisionDigitalInputPin(provider,pins[i],pins[i].toString(),PinPullResistance.PULL_UP);
+            String name = String.format("INPUT-%02X - %s",baseAddress,pins[i].toString());
+            System.out.printf("pin %02d name [%s]\n",i,name);
+            pinInput[i] = gpio.provisionDigitalInputPin(provider,pins[i],name,PinPullResistance.PULL_UP);
         }
     }
 
@@ -82,37 +84,46 @@ public class ReedControllerRow  implements GpioPinListenerDigital,InputControlle
         final int index = findPinIndex(pin);
 //        System.out.printf("Handling event [%s] for pin index [%d]\n",event.getPin().getName(),index);
 
-        if(index != -1 && getBounceState(index) != state && debouncing[index].get() == false) {
-            //debounce logic, state must hold it's state for a period of time
-            debouncing[index].set(true);
-            setBounceState(index,state);
-            Runnable r = new Runnable() {
-                public void run() {
-//                    System.out.format("%d Debounce logic started\n",index);
-                    final PinState prevState = state;    //remember what the state needs to be
-                    try {
-                        Thread.sleep(BOUNCE_DELAY);
-//                        System.out.format("%d pin prev=[%s] current=[%s]\n",index,prevState,getBounceState(index));
-                        if(getBounceState(index) == prevState) {
-                            for(PieceListenerRow listener : listeners) {
+        for(PieceListenerRow listener : listeners) {
 //                                System.out.printf("row [%02X] notifying listener\n",baseAddress);
-                                if(stateIsDown(event.getState())) {
-                                    listener.pieceDown(baseAddress,index);
-                                } else {
-                                    listener.pieceUp(baseAddress,index);
-                                }
-                            }
-                        }
-                    } catch(InterruptedException e) {}
-                    setBounceState(index,null);
-                    debouncing[index].set(false);
-                }
-            };
-            new Thread(r).start();
-        }  else {
-            //just store the new state
-            setBounceState(index,state);
+            if(stateIsDown(event.getState())) {
+                listener.pieceDown(baseAddress,index);
+            } else {
+                listener.pieceUp(baseAddress,index);
+            }
         }
+//
+//        if(index != -1 && getBounceState(index) != state && debouncing[index].get() == false) {
+//            //debounce logic, state must hold it's state for a period of time
+//            debouncing[index].set(true);
+//            setBounceState(index,state);
+//            Runnable r = new Runnable() {
+//                public void run() {
+////                    System.out.format("%d Debounce logic started\n",index);
+//                    final PinState prevState = state;    //remember what the state needs to be
+//                    try {
+//                        Thread.sleep(BOUNCE_DELAY);
+////                        System.out.format("%d pin prev=[%s] current=[%s]\n",index,prevState,getBounceState(index));
+//                        if(getBounceState(index) == prevState) {
+//                            for(PieceListenerRow listener : listeners) {
+////                                System.out.printf("row [%02X] notifying listener\n",baseAddress);
+//                                if(stateIsDown(event.getState())) {
+//                                    listener.pieceDown(baseAddress,index);
+//                                } else {
+//                                    listener.pieceUp(baseAddress,index);
+//                                }
+//                            }
+//                        }
+//                    } catch(InterruptedException e) {}
+//                    setBounceState(index,null);
+//                    debouncing[index].set(false);
+//                }
+//            };
+//            new Thread(r).start();
+//        }  else {
+//            //just store the new state
+//            setBounceState(index,state);
+//        }
     }
 
     public int findPinIndex(Pin p) {

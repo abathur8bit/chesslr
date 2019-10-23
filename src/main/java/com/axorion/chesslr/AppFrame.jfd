@@ -1,4 +1,4 @@
-JFDML JFormDesigner: "6.0.6.4.204" Java: "11.0.3" encoding: "UTF-8"
+JFDML JFormDesigner: "6.0.6.4.204" Java: "11.0.4" encoding: "UTF-8"
 
 new FormModel {
 	contentType: "form/swing"
@@ -8,6 +8,7 @@ new FormModel {
 			"resizable": false
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentMoved", "windowMoved", true ) )
 			addEvent( new FormEvent( "java.awt.event.ComponentListener", "componentResized", "windowResized", true ) )
+			addEvent( new FormEvent( "java.awt.event.MouseListener", "mouseReleased", "thisMouseReleased", true ) )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.BorderLayout ) ) {
 				name: "mainPanel"
 				"minimumSize": new java.awt.Dimension( 337, 50 )

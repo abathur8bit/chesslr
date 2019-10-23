@@ -48,9 +48,7 @@ import com.rahul.stockfish.Stockfish;
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.CropImageFilter;
 import java.awt.image.FilteredImageSource;
@@ -116,7 +114,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     Color buttonSelectedColor = Color.gray;
     int colorIndex=0;
     boolean isShowingPieces = false;
-    MoveThread moveThread = new MoveThread(this);
+    MoveThread moveThread;
     boolean boardAttached;
     ChessMove waitForMove = null;
     GameMode mode = GameMode.PLAYING;
@@ -129,8 +127,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     Stockfish fish = new Stockfish();
     String stockfishPath = "../stockfish/cmake-build-debug/stockfish";
 
-    public AppFrame(String title,boolean boardAttached) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
+    public AppFrame(String title,boolean boardAttached,long waitTime) throws ClassNotFoundException, UnsupportedLookAndFeelException, InstantiationException, IllegalAccessException, IOException, I2CFactory.UnsupportedBusNumberException {
         super(title);
+        moveThread = new MoveThread(this,waitTime);
         this.boardAttached = boardAttached;
         prefs = new ChessPrefs(this);
         prefs.loadPrefs();
@@ -208,7 +207,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         }
         moveThread.start();
 
-        resetBoard();
+//        resetBoard();
+        enableButtons();
 
         if(fish.startEngine(ChessLR.stockfishPath) == false) {
             System.out.println("Unable to start stockfish");
@@ -216,7 +216,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             System.out.println("Stockfish ready");
         }
 
-        setMessage("New "+numberPlayers+" player game started");
+        setMessage("New "+numberPlayers+" player game started, game id "+chessBoard.getGameId());
     }
 
     /** Start waiting for a specific move to be made.
@@ -317,7 +317,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 //    }
 
     public void startApp() throws IOException {
+        long tempGameId = chessBoard.getGameId();
         resetBoard();
+        chessBoard.setGameId(tempGameId);
         setVisible(true);
         settingsDialog = new SettingsDialog(this);  //construct here, so correct window size and position can be determined.
         SwingUtilities.invokeLater(() -> {
@@ -348,13 +350,15 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 if(pieceUpIndex == -1) {
                     //only process the first lift, as others are the piece moving around
                     //also if we are waiting for a piece down, we can't start a new move
+                    System.out.println("Piece up at "+chessBoard.indexToBoard(boardIndex));
                     pieceUpIndex = boardIndex;
                     chessBoardController.led(pieceUpIndex,true);
                     board.setSquareStatus(pieceUpIndex,BoardPanel.SquareStatus.SELECTED);
                     processMove();
                 } else {
-                    System.out.println("Picking up a second piece");
+                    System.out.println("Picking up second piece at "+chessBoard.indexToBoard(boardIndex));
                     secondPieceUpIndex = boardIndex;
+                    chessBoardController.blink(2,100,true,boardIndex);
                     chessBoardController.led(boardIndex,true);
                 }
                 break;
@@ -538,11 +542,30 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     public void recordMove(ChessMove move) {
+        ChessMove finishCastle = null;
+        if(move.isCastleQueenSide() || move.isCastleKingSide()) {
+            if(chessBoard.getCurrentMove() == ChessBoard.Side.WHITE) {
+                if(move.isCastleKingSide()) {
+                    finishCastle = new ChessMove(chessBoard,"h1f1");
+                } else {
+                    finishCastle = new ChessMove(chessBoard,"a1d1");
+                }
+            } else {
+                if(move.isCastleKingSide()) {
+                    finishCastle = new ChessMove(chessBoard,"h8f8");
+                } else {
+                    finishCastle = new ChessMove(chessBoard,"a8d8");
+                }
+            }
+        }
         chessBoard.move(move);
+        if(finishCastle != null)
+            setWaitForMove(finishCastle);
+
         if(numberPlayers == 1 && !prefs.isDisableEngine()) {
             if(chessBoard.getCurrentMove() != playerSide) {
                 try {
-                    String cpuEan = fish.getBestMove(chessBoard.toFen(),1000);
+                    String cpuEan = fish.getBestMove(chessBoard.toFen(),1);
                     ChessMove cpuMove = new ChessMove(chessBoard,cpuEan);
                     chessBoard.move(cpuMove);
                     setWaitForMove(cpuMove);
@@ -560,10 +583,13 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 float score = fish.getEvalScore(chessBoard.toFen(),1);
                 setMessage("Score "+score);
             } catch(IOException e) {
+                e.printStackTrace();
                 setMessage("Stockfish restarted");
                 fish.startEngine(ChessLR.stockfishPath);
             }
         }
+
+        saveGameMenuItemActionPerformed(null);  //save current game
     }
 
     public void enableButtons() {
@@ -580,13 +606,13 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     public void startup() {
-        new Thread(() -> {
-            try {
-                showMatrixAnim("sweap.gif");
-            } catch(InterruptedException|IOException e) {
-                //do nothing
-            }
-        }).start();
+//        new Thread(() -> {
+//            try {
+//                showMatrixAnim("sweap.gif");
+//            } catch(InterruptedException|IOException e) {
+//                //do nothing
+//            }
+//        }).start();
     }
 
     public void showMatrixAnim(String filename) throws InterruptedException,IOException {
@@ -640,6 +666,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             simBoard.reset();
         chessBoardController.resetBoard();
         chessBoard.resetBoard(playerSide);
+        chessBoard.setGameId(chessBoard.getGameId()+1);
         board.resetBoard();
         pieceUpIndex = -1;
         pieceDownIndex = -1;
@@ -648,6 +675,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         setWaitForMove(null);
         enableButtons();
         board.repaint();
+        mode = GameMode.PLAYING;
+        getPrefs().savePrefs(chessBoard);
     }
 
     /**
@@ -765,11 +794,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void windowMoved(ComponentEvent e) {
-        getPrefs().savePrefs(chessBoard.toFen());
+        getPrefs().savePrefs(chessBoard);
     }
 
     private void windowResized(ComponentEvent e) {
-        getPrefs().savePrefs(chessBoard.toFen());
+        getPrefs().savePrefs(chessBoard);
     }
 
     private void newMenuItemActionPerformed(ActionEvent e) {
@@ -795,6 +824,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         isShowingPieces = show;
         if(isShowingPieces) {
             for(int i = 0; i < 64; i++) {
+                if(i == 35 || i==36) {
+                    System.out.println("Stop here");
+                }
                 chessBoardController.led(i,chessBoardController.hasPiece(i));
             }
         } else {
@@ -825,7 +857,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         try {
             saveGame();
             savePgn();
-            JOptionPane.showMessageDialog(this,"Game "+chessBoard.getGameId()+" saved.");
+//            JOptionPane.showMessageDialog(this,"Game "+chessBoard.getGameId()+" saved.");
         } catch(IOException e) {
             ChessLR.handleError("Unable to save game Id"+chessBoard.getGameId(),e);
         }
@@ -836,6 +868,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         if(move != null) {
 
             board.resetBoard();
+            chessBoardController.led(-1,false); //turn off all leds
             board.setSquareStatus(move.getFromIndex(),BoardPanel.SquareStatus.SELECTED);
             board.setSquareStatus(move.getToIndex(),BoardPanel.SquareStatus.SELECTED);
 
@@ -864,6 +897,11 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void layoutButtonActionPerformed() {
+        //clear any move that is being waited on and make sure mode is setup correctly for layout to show
+        setWaitForMove(null);
+        if(mode != GameMode.PLAYING && mode != GameMode.SHOW_LAYOUT)
+            mode = GameMode.PLAYING;
+
         showLayout(mode == GameMode.SHOW_LAYOUT ? false:true);
     }
 
@@ -912,16 +950,29 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             }
             resetBoard();
 
-            setMessage("New "+numberPlayers+" player as "+playerSide+" started");
+            if(prefs.getPlayers() == 1) {
+                chessBoard.setFenPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+            }
+            setMessage("New "+numberPlayers+" player as "+playerSide+" started, game id "+chessBoard.getGameId());
         }
-        //TODO Options should be available in the settings dialog
-        //  and settings should be persisted when dialog is closed.
-        getPrefs().savePrefs(chessBoard.toFen());
+        getPrefs().savePrefs(chessBoard);
     }
 
     /** Set the text on the message bar. */
     public void setMessage(String s) {
         messageLabel.setText(s);
+    }
+
+    private void thisMouseReleased(MouseEvent e) {
+
+        System.out.printf("window size %dx%d title bar %d\n",getWidth(),getHeight(),getInsets().top);
+        int squareSize = getWidth()/8;
+        int squarex = e.getX()/squareSize;
+        int squarey = (e.getY()-(this.getInsets().top+2))/squareSize;
+        System.out.printf("Mouse released at %d,%d square %d,%d %s\n",e.getX(),e.getY(),squarex,squarey,chessBoard.indexToBoard(chessBoard.toIndex(squarex,squarey)));
+        if(squarex<8 && squarey<8)
+            simBoard.mouseClicked(squarex,squarey);
+
     }
 
     private void initComponents() {
@@ -961,6 +1012,12 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             @Override
             public void componentResized(ComponentEvent e) {
                 windowResized(e);
+            }
+        });
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                thisMouseReleased(e);
             }
         });
         Container contentPane = getContentPane();

@@ -71,6 +71,16 @@ public class ReedController8x8 implements InputController,PieceListener,PieceLis
     ReedControllerRow[] reedControllerRows;
     int bus;
     List<PieceListener> listeners = new ArrayList<PieceListener>();
+    int pinMap[] = {
+            0,1,2,3,4,5,6,7,
+            0,1,2,3,4,5,6,7,
+            0,1,2,3,4,5,6,7,
+            0,1,2,3,4,5,6,7,
+            0,1,2,4,3,5,6,7,
+            0,1,2,3,4,5,6,7,
+            0,1,2,3,4,5,6,7,
+            0,1,2,3,4,5,6,7,
+    };
 
     public ReedController8x8(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
         init(gpio,bus);
@@ -129,6 +139,7 @@ public class ReedController8x8 implements InputController,PieceListener,PieceLis
     }
 
     public int calcRowIndex(int pin) {
+        pin = mapPin(pin);
         int row = pin/8;
         int i = pin-row*8;
         return i;
@@ -136,18 +147,18 @@ public class ReedController8x8 implements InputController,PieceListener,PieceLis
 
     @Override
     public void pieceUp(int boardIndex) {
-        System.out.printf("Got piece up on index %d\n",boardIndex);
+        System.out.printf("XXXGot piece up on index %d\n",boardIndex);
     }
 
     @Override
     public void pieceDown(int boardIndex) {
-        System.out.printf("Got piece down on index %d\n",boardIndex);
+        System.out.printf("XXXGot piece down on index %d\n",boardIndex);
     }
 
     @Override
     public void pieceUp(int id,int index) {
-        int boardIndex = (id-BASE_ADDRESS)*NUM_COLS+index;
-        System.out.printf("Got piece up on row id %x index %d board index %d\n",id,index,boardIndex);
+        int boardIndex = mapPin(id,index);
+        System.out.printf("Got piece up on row addr %02XH index %d board index %d\n",id,index,boardIndex);
         for(PieceListener listener : listeners) {
             listener.pieceUp(boardIndex);
         }
@@ -155,10 +166,37 @@ public class ReedController8x8 implements InputController,PieceListener,PieceLis
 
     @Override
     public void pieceDown(int id,int index) {
-        int boardIndex = (id-BASE_ADDRESS)*NUM_COLS+index;
-        System.out.printf("Got piece down on row id %x index %d board index %d\n",id,index,boardIndex);
+        int boardIndex = mapPin(id,index);
+        System.out.printf("Got piece down on row addr %02XH index %d board index %d\n",id,index,boardIndex);
         for(PieceListener listener : listeners) {
             listener.pieceDown(boardIndex);
         }
+    }
+
+    protected int mapPin(int id,int index) {
+        int row = (id-BASE_ADDRESS);
+        int mappedIndex = pinMap[row*NUM_COLS+index];
+        int boardIndex = row*NUM_COLS+mappedIndex;
+        if(mappedIndex != index) {
+            System.out.printf("Remapping %d to %d\n",index,mappedIndex);
+        }
+        return boardIndex;
+    }
+
+    protected int mapPin(int boardIndex) {
+        int[] map = {
+                 0, 1, 2, 3, 4, 5, 6, 7,
+                 8, 9,10,11,12,13,14,15,
+                16,17,18,19,20,21,22,23,
+                24,25,26,27,28,29,30,31,
+                32,33,34,35,36,37,38,39,
+                40,41,42,43,44,45,46,47,
+                48,49,50,51,52,53,54,55,
+                56,57,58,59,60,61,62,63
+        };
+        if(boardIndex != map[boardIndex]) {
+            System.out.println("Remapping "+boardIndex+" to "+map[boardIndex]+".");
+        }
+        return map[boardIndex];
     }
 }

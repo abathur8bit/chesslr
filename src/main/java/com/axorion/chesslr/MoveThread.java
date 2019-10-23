@@ -34,9 +34,15 @@ public class MoveThread extends Thread {
     Integer up = -1,down = -1,secondUp = -1;
     boolean sleepInterrupted = false;
     volatile boolean running = false;
+    long waitTime = 750;
 
     public MoveThread(AppFrame parent) {
+        this(parent,750);
+    }
+
+    public MoveThread(AppFrame parent,long waitTime) {
         this.parent = parent;
+        this.waitTime = waitTime;
     }
 
     public void run() {
@@ -44,7 +50,7 @@ public class MoveThread extends Thread {
         while(running) {
             try {
                 //first wait for a time ...
-                Thread.sleep(750);
+                Thread.sleep(waitTime);
 
                 synchronized(lock) {
                     if(sleepInterrupted) {

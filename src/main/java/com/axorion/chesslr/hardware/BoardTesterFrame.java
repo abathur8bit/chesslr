@@ -54,7 +54,7 @@ public class BoardTesterFrame extends JFrame {
        int inputAddress = toInt(inputAddressTextField.getText());
        int inputBank = Integer.parseInt(inputBankTextField.getText());
        maxLed = toInt(maxLedTextField.getText());
-       log(String.format("Using bus %d\nmaxLed %d\nled address 0x%02X (%d) led bank %d\ninput address 0x%02X (%d) input bank %d",bus,maxLed,address,address,bank,inputAddress,inputAddress,inputBank));
+       log(String.format("Using BUS %d\nmaxLed %d\nled address 0x%02X (%d) led bank %d\ninput address 0x%02X (%d) input bank %d",bus,maxLed,address,address,bank,inputAddress,inputAddress,inputBank));
        ledController = new LEDTesterController(gpio,bus,address,bank);
        inputController = new InputTesterController(gpio,bus,inputAddress,inputBank);
 //       inputController.addListener(new GpioPinListenerDigital() {
@@ -92,11 +92,11 @@ public class BoardTesterFrame extends JFrame {
             try {
                 @SuppressWarnings("unused")
                 I2CBus bus = I2CFactory.getInstance(number);
-                System.out.println("Supported I2C bus "+number+" found");
+                System.out.println("Supported I2C BUS "+number+" found");
             } catch(IOException exception) {
-                System.out.println("I/O error on I2C bus "+number+" occurred");
+                System.out.println("I/O error on I2C BUS "+number+" occurred");
             } catch(I2CFactory.UnsupportedBusNumberException exception) {
-                System.out.println("Unsupported I2C bus "+number);
+                System.out.println("Unsupported I2C BUS "+number);
             }
         }
 

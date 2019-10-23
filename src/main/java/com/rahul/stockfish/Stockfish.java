@@ -37,6 +37,7 @@ public class Stockfish {
             processWriter = new OutputStreamWriter(
                     engineProcess.getOutputStream());
         } catch (Exception e) {
+            e.printStackTrace();
             return false;
         }
         return true;
@@ -96,8 +97,10 @@ public class Stockfish {
      */
     public String getBestMove(String fen, int waitTime) throws IOException {
         sendCommand("position fen " + fen);
-        sendCommand("go movetime " + waitTime);
-        return getOutput(waitTime + 20).split("bestmove ")[1].split(" ")[0].substring(0,4);
+        sendCommand("go movetime " + waitTime+" depth 1");
+        String output = getOutput(waitTime+20);
+        System.out.println(output);
+        return output.split("bestmove ")[1].split(" ")[0].substring(0,4);
     }
 
     /**
@@ -109,6 +112,7 @@ public class Stockfish {
             processReader.close();
             processWriter.close();
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

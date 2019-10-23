@@ -48,12 +48,16 @@ public class SimBoard extends JDialog implements LEDController,InputController {
 
 //        System.out.format("Mouse clicked at mouse=%d,%d square %d,%d\n",mx,my,sx,sy);
 
-        if(boardInterface.isOccupied(sx,sy)) {
-            parent.chessBoardController.pieceUp(sy*8+sx);
+        mouseClicked(sx,sy);
+    }
+
+    public void mouseClicked(int squarex,int squarey) {
+        if(boardInterface.isOccupied(squarex,squarey)) {
+            parent.chessBoardController.pieceUp(squarey*8+squarex);
         } else {
-            parent.chessBoardController.pieceDown(sy*8+sx);
+            parent.chessBoardController.pieceDown(squarey*8+squarex);
         }
-        boardInterface.setOccupied(sx,sy,!boardInterface.isOccupied(sx,sy));
+        boardInterface.setOccupied(squarex,squarey,!boardInterface.isOccupied(squarex,squarey));
         boardPanel.repaint();
         parent.repaint();
     }

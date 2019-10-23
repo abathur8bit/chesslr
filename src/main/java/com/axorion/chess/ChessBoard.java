@@ -40,7 +40,7 @@ public class ChessBoard
     public static final int BLACK = 'b';
     public static final int EMPTY_SQUARE = ' ';
 
-    static long gameId = 1000;
+    private long gameId = 1000;
     Calendar startDate = GregorianCalendar.getInstance();
     DateFormat pgnFormatter = new SimpleDateFormat("yyyy.MM.dd");
 
@@ -272,10 +272,6 @@ public class ChessBoard
         }
         moveCard.clear();
         currentMove = Side.WHITE;
-        castleWhiteKingSide = true;
-        castleWhiteQueenSide = true;
-        castleBlackKingSide = true;
-        castleBlackQueenSide = true;
     }
 
     public void setPosition(String letters) {
@@ -382,25 +378,31 @@ public class ChessBoard
                 temp.append(' ');
             }
 
-            String from = move.getFrom();
-            String to = move.getTo();
-            char pieceFrom = (char)board.pieceAt(from);
-            char pieceTo = (char)board.pieceAt(to);
-            if(pieceFrom>='a') {
-                pieceFrom = (char)(pieceFrom - 'a'+'A');
-            }
-            boolean take = pieceTo != EMPTY_SQUARE;
-            if(pieceFrom == 'P') {
-                if(take) {
-                    temp.append(from.charAt(0)+"x");
-                }
-                temp.append(to);
+            if(move.isCastleKingSide()) {
+                temp.append("O-O");
+            } else if(move.isCastleQueenSide()) {
+                temp.append("O-O-O");
             } else {
-                temp.append(pieceFrom);
-                if(take) {
-                    temp.append('x');
+                String from = move.getFrom();
+                String to = move.getTo();
+                char pieceFrom = (char)board.pieceAt(from);
+                char pieceTo = (char)board.pieceAt(to);
+                if(pieceFrom >= 'a') {
+                    pieceFrom = (char)(pieceFrom-'a'+'A');
                 }
-                temp.append(to);
+                boolean take = pieceTo != EMPTY_SQUARE;
+                if(pieceFrom == 'P') {
+                    if(take) {
+                        temp.append(from.charAt(0)+"x");
+                    }
+                    temp.append(to);
+                } else {
+                    temp.append(pieceFrom);
+                    if(take) {
+                        temp.append('x');
+                    }
+                    temp.append(to);
+                }
             }
 
             if(currentMove == Side.BLACK) {
@@ -465,6 +467,7 @@ public class ChessBoard
     public ChessMove move(ChessMove m) {
         gameBoard[m.getToIndex()] = gameBoard[m.getFromIndex()];
         gameBoard[m.getFromIndex()] = EMPTY_SQUARE;
+        checkForCastle(m);
         moveCard.add(m);
         halfMoveCounter++;
         if(gameBoard[m.getToIndex()] == 'p' || gameBoard[m.getToIndex()] == 'P' || m.isCapture()) {
@@ -477,6 +480,30 @@ public class ChessBoard
             fullMoveCounter++;
         }
         return m;
+    }
+
+    protected void checkForCastle(ChessMove m) {
+        if(currentMove == Side.WHITE) {
+            if(m.isCastleKingSide()) {
+                castleWhiteKingSide = false;
+                gameBoard[63] = EMPTY_SQUARE;
+                gameBoard[61] = 'R';
+            } else if(m.isCastleQueenSide()) {
+                castleWhiteQueenSide = false;
+                gameBoard[56] = EMPTY_SQUARE;
+                gameBoard[59] = 'R';
+            }
+        } else {
+            if(m.isCastleKingSide()) {
+                castleBlackKingSide = false;
+                gameBoard[7] = EMPTY_SQUARE;
+                gameBoard[5] = 'r';
+            } else if(m.isCastleQueenSide()) {
+                castleBlackQueenSide = false;
+                gameBoard[0] = EMPTY_SQUARE;
+                gameBoard[3] = 'r';
+            }
+        }
     }
 
     /** Enter a move in the form of "e2e4". Returns a move object, or null if move was not valid. */

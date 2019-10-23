@@ -18,6 +18,8 @@
 
 package com.axorion.chesslr;
 
+import com.axorion.chess.ChessBoard;
+
 import java.awt.*;
 import java.io.*;
 import java.util.prefs.Preferences;
@@ -77,8 +79,9 @@ public class ChessPrefs {
         }
     }
 
-    public void savePrefs(String fen) {
-        this.fen = fen;
+    public void savePrefs(ChessBoard board) {
+        this.fen = board.toFen();
+        this.gameId = board.getGameId();
         savePrefs();
     }
 

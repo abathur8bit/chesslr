@@ -21,6 +21,9 @@
 package com.axorion.chesslr.hardware;
 
 import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.Pin;
+import com.pi4j.io.gpio.PinState;
+import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.i2c.I2CFactory;
 
 import java.io.IOException;
@@ -47,7 +50,15 @@ import java.util.ArrayList;
  *    a  b  c  d  e  f  g  h
  * </pre>
  */
-public class BoardController implements PieceListener {
+public class BoardController implements PieceListener, ProviderListener {
+
+    final int BUS = I2CBus.BUS_1;
+    static final int BASE_ADDRESS = 0x20;
+    static final int BANK_SIZE = 8;
+    static final int NUM_ROWS = 8;
+    static final int NUM_COLS = 8;
+
+    GpioController gpio;
     LEDController ledController;
     InputController reedController;
     ArrayList<PieceListener> pieceListeners = new ArrayList<PieceListener>();
@@ -94,6 +105,67 @@ public class BoardController implements PieceListener {
             56,57,58,59,60,61,62,63
     };;
 
+    int[] remap = {
+             0, 1, 2, 3, 4, 5, 6, 7,
+             8, 9,10,11,12,13,14,15,
+            16,17,18,19,20,21,22,23,
+            24,25,26,27,28,29,30,31,
+            32,33,34,36,35,37,38,39,
+            40,41,42,43,44,45,46,47,
+            48,49,50,51,52,53,54,55,
+            56,57,58,59,60,61,62,63
+    };
+
+
+    RowProvider[] rowProviders = new RowProvider[NUM_ROWS];
+
+    class BoardLEDController implements LEDController {
+        @Override
+        public void led(int boardIndex,boolean on) {
+            int row = boardIndex/8;
+            int col = boardIndex-row*8;
+            RowProvider provider = rowProviders[row];
+            provider.setState(on,col);
+        }
+
+        @Override
+        public boolean isOn(int boardIndex) {
+            int row = boardIndex/8;
+            int col = boardIndex-row*8;
+            RowProvider provider = rowProviders[row];
+            return provider.outputPins[col].getState().isHigh();
+        }
+    }
+
+    class BoardInputController implements InputController {
+        @Override
+        public void addListener(PieceListener listener) {
+            pieceListeners.add(listener);
+        }
+
+        @Override
+        public int findPinIndex(Pin pin) {
+            return 0;   //not used
+        }
+
+        @Override
+        /** Returns if the state means a piece is down or not.
+         *
+         * @param state State to check.
+         * @return true if piece is detected, false otherwise.
+         */
+        public boolean stateIsDown(PinState state) {
+            return state == PinState.HIGH ? false:true;
+        }
+
+        @Override
+        public boolean isSet(int boardIndex) {
+            int row = boardIndex/8;
+            int col = boardIndex-row*8;
+            RowProvider provider = rowProviders[row];
+            return provider.inputPins[col].getState().isLow();
+        }
+    }
 
     public BoardController(LEDController led,InputController input) throws IOException, I2CFactory.UnsupportedBusNumberException {
         this.ledController = led;
@@ -103,14 +175,15 @@ public class BoardController implements PieceListener {
     }
 
     public BoardController(GpioController gpio,int bus) throws IOException, I2CFactory.UnsupportedBusNumberException {
+        this.gpio = gpio;
         if(gpio == null) {
             // use simulated board
         } else {
-            ledController = new LEDController8x8(gpio,bus);
-            reedController = new ReedController8x8(gpio,bus);
-        }
-        if(reedController != null) {
-            reedController.addListener(this);
+            ledController = new BoardLEDController();
+            reedController = new BoardInputController();
+            for(int i = 0; i < NUM_ROWS; i++) {
+                rowProviders[i] = new RowProvider(gpio,BUS,BASE_ADDRESS+i,this);
+            }
         }
         flashThread = new FlashThread(ledController);
         flashThread.start();
@@ -161,9 +234,22 @@ public class BoardController implements PieceListener {
         pieceListeners.add(listener);
     }
 
+    @Override
+    public void pieceUp(int address,int index) {
+        final int pinIndex = (address-BASE_ADDRESS)*8+index;
+        pieceUp(pinIndex);
+    }
+
+    @Override
+    public void pieceDown(int address,int index) {
+        final int pinIndex = (address-BASE_ADDRESS)*8+index;
+        pieceDown(pinIndex);
+    }
+
+
     /** Calls any listeners to tell them about a piece up event. */
     public void pieceUp(int pinIndex) {
-        final int boardIndex = mapToBoard(pinIndex);
+        final int boardIndex = remap[pinIndex];
         for(PieceListener listener : pieceListeners) {
             listener.pieceUp(boardIndex);
         }
@@ -171,7 +257,7 @@ public class BoardController implements PieceListener {
 
     /** Call any listeners to tell them about a piece down event. */
     public void pieceDown(int pinIndex) {
-        final int boardIndex = mapToBoard(pinIndex);
+        final int boardIndex = remap[pinIndex];
         for(PieceListener listener : pieceListeners) {
             listener.pieceDown(boardIndex);
         }

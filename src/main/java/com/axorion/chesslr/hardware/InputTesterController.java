@@ -3,6 +3,8 @@ package com.axorion.chesslr.hardware;
 import com.pi4j.gpio.extension.mcp.MCP23017GpioProvider;
 import com.pi4j.gpio.extension.mcp.MCP23017Pin;
 import com.pi4j.io.gpio.*;
+import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
+import com.pi4j.io.gpio.event.GpioPinListener;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CFactory;
 
@@ -10,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InputTesterController implements InputController {
+public class InputTesterController implements InputController, GpioPinListener {
     static final int BANK_SIZE = 8;
 
     GpioController gpio;
@@ -59,18 +61,16 @@ public class InputTesterController implements InputController {
     }
 
     public void addListener(PieceListener listener) {
-//        gpio.addListener(listener,pinInput);
+        gpio.addListener(this,pinInput);
     }
 
-//    public void handleGpioPinDigitalStateChangeEvent(final GpioPinDigitalStateChangeEvent event) {
-//        final PinState state = event.getState();
-//        final Pin pin = event.getPin().getPin();
-//        final int index = findPinIndex(pin);
-//
-//        System.out.println("pin "+index+" state "+state);
-//
-//        for(List)
-//    }
+    public void handleGpioPinDigitalStateChangeEvent(final GpioPinDigitalStateChangeEvent event) {
+        final PinState state = event.getState();
+        final Pin pin = event.getPin().getPin();
+        final int index = findPinIndex(pin);
+
+        System.out.println("pin "+index+" state "+state);
+    }
 
     public void removeListener(GpioPinListenerDigital listener) {
         gpio.removeListener(listener);
