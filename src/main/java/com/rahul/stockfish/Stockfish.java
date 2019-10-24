@@ -49,6 +49,7 @@ public class Stockfish {
      * @param command
      */
     public void sendCommand(String command) throws IOException {
+        System.out.println("Sending command ["+command+"]");
         processWriter.write(command + "\n");
         processWriter.flush();
     }
@@ -99,7 +100,7 @@ public class Stockfish {
         sendCommand("position fen " + fen);
         sendCommand("go movetime " + waitTime+" depth 1");
         String output = getOutput(waitTime+20);
-        System.out.println(output);
+        System.out.println("Got result\n"+output);
         return output.split("bestmove ")[1].split(" ")[0].substring(0,4);
     }
 

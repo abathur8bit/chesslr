@@ -60,6 +60,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URL;
+import java.util.ArrayList;
 
 import static java.awt.Image.SCALE_SMOOTH;
 
@@ -117,6 +118,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     MoveThread moveThread;
     boolean boardAttached;
     ChessMove waitForMove = null;
+    ArrayList<ChessMove> waitForMoveList = new ArrayList<ChessMove>();
     GameMode mode = GameMode.PLAYING;
     GameMode previousMode = null;
 
@@ -225,19 +227,82 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
      * If a piece is lifted from the wrong square, flash that LED till the piece is put back down.
      * If a piece is dropped on the wrong square, flast that LED till the piece is lefted up.
      * */
+    private void addWaitForMove(ChessMove move) {
+        waitForMoveList.add(move);
+        if(waitForMoveList.size() == 1) {
+            if(move != null) {
+                setWaitForMove(move);
+            }
+            repaint();
+        }
+    }
+
     private void setWaitForMove(ChessMove move) {
         waitForMove = move;
         if(move != null) {
             mode = GameMode.WAIT_FOR_PIECE_UP;
-
             chessBoardController.led(move.getFromIndex(),true);
             chessBoardController.led(move.getToIndex(),true);
             board.setSquareStatus(move.getFromIndex(),BoardPanel.SquareStatus.SELECTED);
             board.setSquareStatus(move.getToIndex(),BoardPanel.SquareStatus.SELECTED);
         }
-        repaint();
     }
 
+    /** Clears any pending moves, and clears the current wait. */
+    private void removeAllWaitForMoves() {
+        waitForMoveList.clear();
+        waitForMove = null;
+    }
+
+    private void removeWaitForMove() {
+        if(waitForMoveList.size() > 0) {
+            waitForMoveList.remove(0);
+            if(waitForMoveList.size()>0) {
+                setWaitForMove(waitForMoveList.get(0));
+            } else {
+                setWaitForMove(null);
+                //check if we need to make a computer move
+                computerMove();
+            }
+        }
+    }
+
+    private void computerMove() {
+        if(numberPlayers == 1 && !prefs.isDisableEngine() && waitForMove == null) {
+            if(chessBoard.getCurrentMove() != playerSide) {
+                System.out.println("Making computer move");
+                try {
+                    String cpuEan = fish.getBestMove(chessBoard.toFen(),1);
+                    ChessMove move = new ChessMove(chessBoard,cpuEan);
+                    ChessMove finishCastle = null;
+                    if(move.isCastleQueenSide() || move.isCastleKingSide()) {
+                        if(chessBoard.getCurrentMove() == ChessBoard.Side.WHITE) {
+                            if(move.isCastleKingSide()) {
+                                finishCastle = new ChessMove(chessBoard,"h1f1");
+                            } else {
+                                finishCastle = new ChessMove(chessBoard,"a1d1");
+                            }
+                        } else {
+                            if(move.isCastleKingSide()) {
+                                finishCastle = new ChessMove(chessBoard,"h8f8");
+                            } else {
+                                finishCastle = new ChessMove(chessBoard,"a8d8");
+                            }
+                        }
+                    }
+                    chessBoard.move(move);
+                    addWaitForMove(move);
+                    if(finishCastle != null)
+                        addWaitForMove(finishCastle);
+                } catch(IOException e) {
+                    String msg = "Unable to get move from engine";
+                    System.out.println(msg);
+                    e.printStackTrace();
+                    setMessage(msg);
+                }
+            }
+        }
+    }
     /** Any text that is added to the moves text area will automatically scroll into view. */
     private void movesAutoScroll() {
         DefaultCaret caret = (DefaultCaret) movesTextArea.getCaret();
@@ -512,8 +577,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                     chessBoardController.led(waitForMove.getToIndex(),false);
                     board.resetBoard();
                     showLastMove();
-                    setWaitForMove(null);
                     mode = GameMode.PLAYING;
+                    removeWaitForMove();
                 }
                 break;
 
@@ -582,20 +647,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         }
         chessBoard.move(move);
         if(finishCastle != null)
-            setWaitForMove(finishCastle);
+            addWaitForMove(finishCastle);
 
-        if(numberPlayers == 1 && !prefs.isDisableEngine()) {
-            if(chessBoard.getCurrentMove() != playerSide) {
-                try {
-                    String cpuEan = fish.getBestMove(chessBoard.toFen(),1);
-                    ChessMove cpuMove = new ChessMove(chessBoard,cpuEan);
-                    chessBoard.move(cpuMove);
-                    setWaitForMove(cpuMove);
-                } catch(IOException e) {
-                    setMessage("Unable to get move from engine");
-                }
-            }
-        }
+        computerMove();
         updateMovesText();
         board.repaint();
         enableButtons();
@@ -694,7 +748,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         pieceDownIndex = -1;
         isShowingPieces = false;
         movesTextArea.setText("");
-        setWaitForMove(null);
+        removeAllWaitForMoves();
         enableButtons();
         board.repaint();
         mode = GameMode.PLAYING;
@@ -841,7 +895,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void showPieces(boolean show) {
-        setWaitForMove(null);
+        removeAllWaitForMoves();
 
         isShowingPieces = show;
         if(isShowingPieces) {
@@ -900,7 +954,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    setWaitForMove(move);
+                    addWaitForMove(move);
                     updateMovesText();
                     enableButtons();
                     board.repaint();
@@ -920,7 +974,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
 
     private void layoutButtonActionPerformed() {
         //clear any move that is being waited on and make sure mode is setup correctly for layout to show
-        setWaitForMove(null);
+        removeAllWaitForMoves();
         if(mode != GameMode.PLAYING && mode != GameMode.SHOW_LAYOUT)
             mode = GameMode.PLAYING;
 
@@ -972,9 +1026,10 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             }
             resetBoard();
 
-            if(prefs.getPlayers() == 1) {
-                chessBoard.setFenPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-            }
+//            //todo lee forcing castling to be unavailable in 1 player game
+//            if(prefs.getPlayers() == 1) {
+//                chessBoard.setFenPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
+//            }
             setMessage("New "+numberPlayers+" player as "+playerSide+" started, game id "+chessBoard.getGameId());
         }
         getPrefs().savePrefs(chessBoard);

@@ -272,6 +272,11 @@ public class ChessBoard
         }
         moveCard.clear();
         currentMove = Side.WHITE;
+
+        castleWhiteQueenSide = true;
+        castleWhiteKingSide = true;
+        castleBlackQueenSide = true;
+        castleBlackKingSide = true;
     }
 
     public void setPosition(String letters) {
