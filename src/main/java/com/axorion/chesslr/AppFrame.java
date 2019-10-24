@@ -352,12 +352,14 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                     //also if we are waiting for a piece down, we can't start a new move
                     System.out.println("Piece up at "+chessBoard.indexToBoard(boardIndex));
                     pieceUpIndex = boardIndex;
-                    chessBoardController.led(pieceUpIndex,true);
-                    board.setSquareStatus(pieceUpIndex,BoardPanel.SquareStatus.SELECTED);
+                    chessBoardController.led(boardIndex,true);
+                    board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.SELECTED);
                     processMove();
                 } else {
                     System.out.println("Picking up second piece at "+chessBoard.indexToBoard(boardIndex));
                     secondPieceUpIndex = boardIndex;
+                    chessBoardController.led(boardIndex,true);
+                    board.setSquareStatus(boardIndex,BoardPanel.SquareStatus.SELECTED);
                     flashCapturedPiece(pieceUpIndex,secondPieceUpIndex);
                     processMove();
                 }
