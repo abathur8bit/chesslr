@@ -81,30 +81,11 @@ public class BoardController implements PieceListener, ProviderListener {
             8,9,10,
             16,17,18}; //top left
 
-    /*
-    d4/e4
+    /**
+     * Normally the reeds go from 0 through 63 in order. But if you wired them in the
+     * wrong order, this index will be used to map them from the pin index to the board
+     * index.
      */
-    int[] boardToPinMap = {
-             0, 1, 2, 3, 4, 5, 6, 7,
-             8, 9,10,11,12,13,14,15,
-            16,17,18,19,20,21,22,23,
-            24,25,26,27,28,29,30,31,
-            32,33,34,35,36,37,38,39,
-            40,41,42,43,44,45,46,47,
-            48,49,50,51,52,53,54,55,
-            56,57,58,59,60,61,62,63
-    };
-    int[] pinToBoardMap = {
-             0, 1, 2, 3, 4, 5, 6, 7,
-             8, 9,10,11,12,13,14,15,
-            16,17,18,19,20,21,22,23,
-            24,25,26,27,28,29,30,31,
-            32,33,34,35,36,37,38,39,
-            40,41,42,43,44,45,46,47,
-            48,49,50,51,52,53,54,55,
-            56,57,58,59,60,61,62,63
-    };;
-
     int[] remap = {
              0, 1, 2, 3, 4, 5, 6, 7,
              8, 9,10,11,12,13,14,15,
@@ -160,6 +141,7 @@ public class BoardController implements PieceListener, ProviderListener {
 
         @Override
         public boolean isSet(int boardIndex) {
+            boardIndex = remap[boardIndex];     //to handle reed switches that are wired incorrectly
             int row = boardIndex/8;
             int col = boardIndex-row*8;
             RowProvider provider = rowProviders[row];
@@ -190,11 +172,11 @@ public class BoardController implements PieceListener, ProviderListener {
     }
 
     public void flashOn(int ledIndex) {
-        flashThread.addLed(mapToPin(ledIndex));
+        flashThread.addLed(ledIndex);
     }
 
     public void flashOff(int ledIndex) {
-        flashThread.removeLed(mapToPin(ledIndex));
+        flashThread.removeLed(ledIndex);
     }
 
     public InputController getInputController() {
@@ -208,16 +190,16 @@ public class BoardController implements PieceListener, ProviderListener {
     public void led(int squareIndex,boolean on) {
         if(squareIndex == -1) {
             for(int i = 0; i < 64; i++) {
-                ledController.led(mapToPin(i),on);
+                ledController.led(i,on);
             }
         } else {
-            ledController.led(mapToPin(squareIndex),on);
+            ledController.led(squareIndex,on);
         }
     }
 
     /** Return if an LED is on at the specified index. */
     public boolean isLEDOn(int boardIndex) {
-        return ledController.isOn(mapToPin(boardIndex));
+        return ledController.isOn(boardIndex);
     }
 
     /**
@@ -227,7 +209,7 @@ public class BoardController implements PieceListener, ProviderListener {
      * @return true if there is a piece on the square, false otherwise.
      */
     public boolean hasPiece(int boardIndex) {
-        return reedController.isSet(mapToPin(boardIndex));
+        return reedController.isSet(boardIndex);
     }
 
     public void addListener(PieceListener listener) {
@@ -237,59 +219,28 @@ public class BoardController implements PieceListener, ProviderListener {
     @Override
     public void pieceUp(int address,int index) {
         final int pinIndex = (address-BASE_ADDRESS)*8+index;
-        pieceUp(pinIndex);
+        pieceUp(remap[pinIndex]);
     }
 
     @Override
     public void pieceDown(int address,int index) {
         final int pinIndex = (address-BASE_ADDRESS)*8+index;
-        pieceDown(pinIndex);
+        pieceDown(remap[pinIndex]);
     }
 
 
     /** Calls any listeners to tell them about a piece up event. */
-    public void pieceUp(int pinIndex) {
-        final int boardIndex = remap[pinIndex];
+    public void pieceUp(int boardIndex) {
         for(PieceListener listener : pieceListeners) {
             listener.pieceUp(boardIndex);
         }
     }
 
     /** Call any listeners to tell them about a piece down event. */
-    public void pieceDown(int pinIndex) {
-        final int boardIndex = remap[pinIndex];
+    public void pieceDown(int boardIndex) {
         for(PieceListener listener : pieceListeners) {
             listener.pieceDown(boardIndex);
         }
-    }
-
-    private int mapToBoard(int pinIndex) {
-//        return pinIndex;
-//        int[] pinToBoardMap = {3,4,5,11,12,13,19,20,21}; //upper middle
-//        int[] pinToBoardMap = {56,57,58,48,49,50,40,41,42}; //bottom leff
-//        if(pinIndex>pinToBoardMap.length) {
-//            return 0;
-//        }
-        return pinToBoardMap[pinIndex];
-    }
-
-    /** Map a board index (0-63) to the correct pin #. */
-    private int mapToPin(int boardIndex) {
-//        return boardIndex;
-        //upper middle
-//        int[] boardToPinMap = {
-//                0,0,0,0,1,2,0,0,
-//                0,0,0,3,4,5,0,0,
-//                0,0,0,6,7,8,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0,
-//                0,0,0,0,0,0,0,0
-//        };
-        //top left
-        return boardToPinMap[boardIndex];
-
     }
 
     public void resetBoard() {
