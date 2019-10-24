@@ -610,6 +610,16 @@ public class ChessBoard
         return fen.toString();
     }
 
+    /** Returns if the given piece is white. */
+    public boolean isWhite(char piece) {
+        return Character.isUpperCase(piece);
+    }
+
+    /** Returns if the given piece is black. */
+    public boolean isBlack(char piece) {
+        return Character.isLowerCase(piece);
+    }
+
     public String toString() {
         return toFen();
     }

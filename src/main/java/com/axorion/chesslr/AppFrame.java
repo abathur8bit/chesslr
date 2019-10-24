@@ -358,8 +358,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
                 } else {
                     System.out.println("Picking up second piece at "+chessBoard.indexToBoard(boardIndex));
                     secondPieceUpIndex = boardIndex;
-                    chessBoardController.blink(2,100,true,boardIndex);
-                    chessBoardController.led(boardIndex,true);
+                    flashCapturedPiece(pieceUpIndex,secondPieceUpIndex);
+                    processMove();
                 }
                 break;
 
@@ -527,6 +527,26 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             moveThread.waitForMoveComplete(pieceUpIndex,pieceDownIndex,secondPieceUpIndex);
         }
         enableButtons();
+    }
+
+    /** Flashes the piece of the opposite color.
+     * @param firstPiece First board index that was piece up.
+     * @param secondPiece Second board index that was piece up.
+     */
+    public void flashCapturedPiece(int firstPiece,int secondPiece) {
+        if(chessBoard.getCurrentMove() == ChessBoard.Side.WHITE) {
+            if(chessBoard.isBlack(chessBoard.pieceAt(firstPiece))) {
+                chessBoardController.blink(2,100,true,firstPiece);
+            } else {
+                chessBoardController.blink(2,100,true,secondPiece);
+            }
+        } else {
+            if(chessBoard.isWhite(chessBoard.pieceAt(firstPiece))) {
+                chessBoardController.blink(2,100,true,firstPiece);
+            } else {
+                chessBoardController.blink(2,100,true,secondPiece);
+            }
+        }
     }
 
     public void showLastMove() {
