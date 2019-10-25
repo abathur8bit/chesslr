@@ -107,7 +107,12 @@ public class Stockfish {
 
     /**
      * This function returns the best move for a given position after
-     * calculating for 'waitTime' ms
+     * calculating for 'waitTime' ms.
+     *
+     * If there is an error when sending the command(s) the engine will be
+     * restarted, and commands sent again. If there is a second error, or
+     * the engine didn't initialize, exception will be passed back to the
+     * caller.
      *
      * @param fen
      *            Position string
@@ -116,6 +121,32 @@ public class Stockfish {
      * @return Best Move in PGN format
      */
     public String getBestMove(String fen, int waitTime) throws IOException {
+        String output = null;
+        try {
+            output = sendGetBestMove(fen,waitTime);
+        } catch(IOException e) {
+            System.out.println("ERROR got IO Error from Stockfish, trying 1 more time. Stacktrace:");
+            e.printStackTrace();
+            snore(1000);
+            closeIgnoreException();     //close the existing process, ignore errors since Stockfish is already dead
+            if(startEngine() == true) { //try to restart the engine
+                output = sendGetBestMove(fen,waitTime);  //engine restarted, resend the commands
+            } else {
+                throw(e);                       //unable to restart
+            }
+        }
+        return output;
+    }
+
+    public void snore(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch(InterruptedException e) {
+            //ignore
+        }
+    }
+
+    public String sendGetBestMove(String fen,int waitTime) throws IOException {
         sendCommand("setoption name Skill Level value "+skillLevel);
         sendCommand("setoption name Slow Mover value "+slowMover);
         sendCommand("position fen " + fen);
@@ -131,10 +162,22 @@ public class Stockfish {
     public void stopEngine() {
         try {
             sendCommand("quit");
-            processReader.close();
-            processWriter.close();
+            close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void close() throws IOException {
+        processReader.close();
+        processWriter.close();
+    }
+
+    public void closeIgnoreException() {
+        try {
+            close();
+        } catch(IOException e) {
+            //ignore
         }
     }
 
