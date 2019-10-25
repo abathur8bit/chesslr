@@ -32,6 +32,9 @@ public class ChessPrefs {
     static final String DISABLE_ENGINE = "disableEngine";
     static final String FEN = "fen";
     static final String PLAYERS = "players";
+    static final String LEVEL = "level";
+    static final String SLOW_MOVER = "slowMover";
+
     AppFrame parent;
     Preferences prefs;
     boolean selectOutput = true;
@@ -41,6 +44,8 @@ public class ChessPrefs {
     boolean showEvaluation = true;
     boolean disableEngine = false;
     int players;
+    int level = 20;
+    int slowMover = 84;
 
     Rectangle bounds;
     File prefsFile; //lazy load in #getPrefsFile
@@ -73,6 +78,8 @@ public class ChessPrefs {
                 showEvaluation = prefs.getBoolean(DISABLE_ENGINE,disableEngine);
                 fen = prefs.get(FEN,null);
                 players = prefs.getInt(PLAYERS,players);
+                level = prefs.getInt(LEVEL,level);
+                slowMover = prefs.getInt(SLOW_MOVER,slowMover);
             } catch(Exception e) {
                 ChessLR.handleError("Unable to load preferences from ["+getPrefsFile().getAbsolutePath()+"]",e);
             }
@@ -98,6 +105,8 @@ public class ChessPrefs {
                     prefs.put(FEN,fen);
                 }
                 prefs.putInt(PLAYERS,players);
+                prefs.putInt(LEVEL,level);
+                prefs.putInt(SLOW_MOVER,slowMover);
             }
 
             OutputStream os = new FileOutputStream(getPrefsFile());
@@ -157,6 +166,22 @@ public class ChessPrefs {
 
     public void setPlayers(int players) {
         this.players = players;
+    }
+
+    public int getLevel() {
+        return level;
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
+    public int getSlowMover() {
+        return slowMover;
+    }
+
+    public void setSlowMover(int slowMover) {
+        this.slowMover = slowMover;
     }
 }
 

@@ -1015,21 +1015,19 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         enableButtons();
         updateMovesText();
         repaint();
+        fish.setSkillLevel(getPrefs().getLevel());
+        fish.setSlowMover(getPrefs().getSlowMover());
 
         if(settingsDialog.isNewOnePlayer() || settingsDialog.isNewTwoPlayer()) {
             numberPlayers = settingsDialog.isNewOnePlayer() ? 1 : 2;
             prefs.setPlayers(numberPlayers);
+
             if(settingsDialog.asBlack) {
                 playerSide = ChessBoard.Side.BLACK;
             } else {
                 playerSide = ChessBoard.Side.WHITE;
             }
             resetBoard();
-
-//            //todo lee forcing castling to be unavailable in 1 player game
-//            if(prefs.getPlayers() == 1) {
-//                chessBoard.setFenPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1");
-//            }
             setMessage("New "+numberPlayers+" player as "+playerSide+" started, game id "+chessBoard.getGameId());
         }
         getPrefs().savePrefs(chessBoard);

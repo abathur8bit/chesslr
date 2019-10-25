@@ -19,6 +19,9 @@ public class Stockfish {
     private static final String PATH = "/home/pi/workspace/stockfish/src/stockfish";
     private String stockfishPath = PATH;
 
+    private int skillLevel = 0;
+    private int slowMover = 10;
+
     public boolean startEngine(String path) {
         stockfishPath = path;
         return startEngine();
@@ -41,6 +44,22 @@ public class Stockfish {
             return false;
         }
         return true;
+    }
+
+    public int getSkillLevel() {
+        return skillLevel;
+    }
+
+    public void setSkillLevel(int skillLevel) {
+        this.skillLevel = skillLevel;
+    }
+
+    public int getSlowMover() {
+        return slowMover;
+    }
+
+    public void setSlowMover(int slowMover) {
+        this.slowMover = slowMover;
     }
 
     /**
@@ -97,6 +116,8 @@ public class Stockfish {
      * @return Best Move in PGN format
      */
     public String getBestMove(String fen, int waitTime) throws IOException {
+        sendCommand("setoption name Skill Level value "+skillLevel);
+        sendCommand("setoption name Slow Mover value "+slowMover);
         sendCommand("position fen " + fen);
         sendCommand("go movetime " + waitTime+" depth 1");
         String output = getOutput(waitTime+20);

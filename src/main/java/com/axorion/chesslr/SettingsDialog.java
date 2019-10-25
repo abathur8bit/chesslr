@@ -46,6 +46,9 @@ public class SettingsDialog extends JDialog {
         pgnNotationCheckbox.setSelected(prefs.isPgnNotation());
         showEvalCheckBox.setSelected(prefs.isShowEvaluation());
         disableEngineCheckBox.setSelected(prefs.isDisableEngine());
+        setLevel(prefs.getLevel());
+        setSlowMover(prefs.getSlowMover());
+
         super.setVisible(true);
     }
 
@@ -53,7 +56,45 @@ public class SettingsDialog extends JDialog {
         prefs.setPgnNotation(pgnNotationCheckbox.isSelected());
         prefs.setShowEvaluation(showEvalCheckBox.isSelected());
         prefs.setDisableEngine(disableEngineCheckBox.isSelected());
+        prefs.setLevel(getLevel());
+        prefs.setSlowMover(getSlowMover());
+
         setVisible(false);
+    }
+
+    public int getLevel() {
+        try {
+            return Integer.parseInt(levelTextField.getText());
+        } catch(NumberFormatException e) {
+//            setLevel(0);
+            return 0;
+        }
+    }
+
+    public void setLevel(int level) {
+        if(level < 0)
+            level = 0;
+        if(level > 20)
+            level = 20;
+
+        this.levelTextField.setText(""+level);
+    }
+
+    public int getSlowMover() {
+        try {
+            return Integer.parseInt(slowMoverTextField.getText());
+        } catch(NumberFormatException e) {
+//            setSlowMover(10);
+            return 10;
+        }
+    }
+
+    public void setSlowMover(int level) {
+        if(level < 10)
+            level = 10;
+        if(level > 1000)
+            level = 1000;
+        this.slowMoverTextField.setText(""+level);
     }
 
     public void setPgnNotation(boolean pgn) {
@@ -166,6 +207,10 @@ public class SettingsDialog extends JDialog {
         enginePanel = new JPanel();
         showEvalCheckBox = new JCheckBox();
         disableEngineCheckBox = new JCheckBox();
+        label1 = new JLabel();
+        levelTextField = new JTextField();
+        label2 = new JLabel();
+        slowMoverTextField = new JTextField();
         testPanel = new JPanel();
         xanimButton = new JButton();
         sweapAnimButton = new JButton();
@@ -225,7 +270,7 @@ public class SettingsDialog extends JDialog {
                     gamePanel.add(twoPlayerWhiteButton);
 
                     //---- twoPlayerBlackButton ----
-                    twoPlayerBlackButton.setText("2W");
+                    twoPlayerBlackButton.setText("2B");
                     twoPlayerBlackButton.setPreferredSize(new Dimension(78, 50));
                     twoPlayerBlackButton.addActionListener(e -> twoPlayerBlackButtonActionPerformed());
                     gamePanel.add(twoPlayerBlackButton);
@@ -244,6 +289,22 @@ public class SettingsDialog extends JDialog {
                     //---- disableEngineCheckBox ----
                     disableEngineCheckBox.setText("Disable Engine");
                     enginePanel.add(disableEngineCheckBox);
+
+                    //---- label1 ----
+                    label1.setText("Level (0-20)");
+                    enginePanel.add(label1);
+
+                    //---- levelTextField ----
+                    levelTextField.setPreferredSize(new Dimension(75, 30));
+                    enginePanel.add(levelTextField);
+
+                    //---- label2 ----
+                    label2.setText("Slow Mover");
+                    enginePanel.add(label2);
+
+                    //---- slowMoverTextField ----
+                    slowMoverTextField.setPreferredSize(new Dimension(75, 30));
+                    enginePanel.add(slowMoverTextField);
                 }
                 contentPanel.add(enginePanel);
 
@@ -307,6 +368,10 @@ public class SettingsDialog extends JDialog {
     private JPanel enginePanel;
     private JCheckBox showEvalCheckBox;
     private JCheckBox disableEngineCheckBox;
+    private JLabel label1;
+    private JTextField levelTextField;
+    private JLabel label2;
+    private JTextField slowMoverTextField;
     private JPanel testPanel;
     private JButton xanimButton;
     private JButton sweapAnimButton;
