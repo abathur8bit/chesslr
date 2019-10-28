@@ -48,6 +48,7 @@ public class SettingsDialog extends JDialog {
         disableEngineCheckBox.setSelected(prefs.isDisableEngine());
         setLevel(prefs.getLevel());
         setSlowMover(prefs.getSlowMover());
+        setMoveTime(prefs.getMoveTime());
 
         super.setVisible(true);
     }
@@ -62,11 +63,27 @@ public class SettingsDialog extends JDialog {
         setVisible(false);
     }
 
+
     public int getLevel() {
         try {
             return Integer.parseInt(levelTextField.getText());
         } catch(NumberFormatException e) {
 //            setLevel(0);
+            return 0;
+        }
+    }
+
+    public void setMoveTime(int moveTime) {
+        if(moveTime < 0)
+            moveTime = 0;
+        this.moveTimeTextField.setText(""+moveTime);
+    }
+
+    public int getMoveTime() {
+        try {
+            return Integer.parseInt(moveTimeTextField.getText());
+        } catch(NumberFormatException e) {
+            setMoveTime(0);
             return 0;
         }
     }

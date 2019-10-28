@@ -272,7 +272,7 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
             if(chessBoard.getCurrentMove() != playerSide) {
                 System.out.println("Making computer move");
                 try {
-                    String cpuEan = fish.getBestMove(chessBoard.toFen(),1);
+                    String cpuEan = fish.getBestMove(chessBoard.toFen(),1000);
                     ChessMove move = new ChessMove(chessBoard,cpuEan);
                     ChessMove finishCastle = null;
                     if(move.isCastleQueenSide() || move.isCastleKingSide()) {
@@ -1017,6 +1017,8 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
         repaint();
         fish.setSkillLevel(getPrefs().getLevel());
         fish.setSlowMover(getPrefs().getSlowMover());
+        fish.setMoveTime(getPrefs().getMoveTime());
+
 
         if(settingsDialog.isNewOnePlayer() || settingsDialog.isNewTwoPlayer()) {
             numberPlayers = settingsDialog.isNewOnePlayer() ? 1 : 2;

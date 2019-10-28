@@ -21,6 +21,7 @@ public class Stockfish {
 
     private int skillLevel = 0;
     private int slowMover = 10;
+    private int moveTime = 0;
 
     public boolean startEngine(String path) {
         stockfishPath = path;
@@ -60,6 +61,14 @@ public class Stockfish {
 
     public void setSlowMover(int slowMover) {
         this.slowMover = slowMover;
+    }
+
+    public int getMoveTime() {
+        return moveTime;
+    }
+
+    public void setMoveTime(int moveTime) {
+        this.moveTime = moveTime;
     }
 
     /**
@@ -138,22 +147,27 @@ public class Stockfish {
         return output;
     }
 
+    /** Send the best move commands. Sets the options and fen position before getting the move. */
+    public String sendGetBestMove(String fen,int waitTime) throws IOException {
+        sendCommand("setoption name Skill Level value "+skillLevel);
+        sendCommand("setoption name Slow Mover value "+slowMover);
+        sendCommand("position fen " + fen);
+        if(moveTime == 0)
+            sendCommand("go depth 1");
+        else
+            sendCommand("go movetime " + moveTime+" depth 1");
+        String output = getOutput(waitTime+20);
+        System.out.println("Got result\n"+output);
+        return output.split("bestmove ")[1].split(" ")[0].substring(0,4);
+    }
+
+    /** Sleep and if interrupted ignore exception. */
     public void snore(long ms) {
         try {
             Thread.sleep(ms);
         } catch(InterruptedException e) {
             //ignore
         }
-    }
-
-    public String sendGetBestMove(String fen,int waitTime) throws IOException {
-        sendCommand("setoption name Skill Level value "+skillLevel);
-        sendCommand("setoption name Slow Mover value "+slowMover);
-        sendCommand("position fen " + fen);
-        sendCommand("go movetime " + waitTime+" depth 1");
-        String output = getOutput(waitTime+20);
-        System.out.println("Got result\n"+output);
-        return output.split("bestmove ")[1].split(" ")[0].substring(0,4);
     }
 
     /**

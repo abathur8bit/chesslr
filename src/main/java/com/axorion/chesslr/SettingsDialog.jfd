@@ -84,7 +84,15 @@ new FormModel {
 						} )
 						add( new FormComponent( "javax.swing.JTextField" ) {
 							name: "slowMoverTextField"
-							"preferredSize": new java.awt.Dimension( 75, 30 )
+							"preferredSize": &Dimension1 new java.awt.Dimension( 75, 30 )
+						} )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label3"
+							"text": "Move Time (ms 0=disable)"
+						} )
+						add( new FormComponent( "javax.swing.JTextField" ) {
+							name: "moveTimeTextField"
+							"preferredSize": #Dimension1
 						} )
 					} )
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {

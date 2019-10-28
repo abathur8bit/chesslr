@@ -240,10 +240,6 @@ public class ChessBoard
             } else if(ch == 'q') {
                 castleBlackQueenSide = true;
             }
-
-                default:
-                    break;
-            }
             fenPos++;
         }
     }
