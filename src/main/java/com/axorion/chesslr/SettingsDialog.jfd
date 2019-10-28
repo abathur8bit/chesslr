@@ -94,12 +94,21 @@ new FormModel {
 							name: "moveTimeTextField"
 							"preferredSize": #Dimension1
 						} )
+						add( new FormComponent( "javax.swing.JLabel" ) {
+							name: "label4"
+							"text": "FEN"
+						} )
+						add( new FormComponent( "javax.swing.JTextField" ) {
+							name: "fenTextField"
+							"preferredSize": new java.awt.Dimension( 375, 30 )
+							"font": new com.jformdesigner.model.SwingDerivedFont( null, 0, -2, false )
+						} )
 					} )
 					add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.FlowLayout ) {
 						"alignment": 0
 					} ) {
 						name: "testPanel"
-						"border": new javax.swing.border.TitledBorder( "Test" )
+						"border": new javax.swing.border.TitledBorder( "Hardware Tests" )
 						add( new FormComponent( "javax.swing.JButton" ) {
 							name: "xanimButton"
 							"text": "X"
@@ -141,7 +150,7 @@ new FormModel {
 			} )
 		}, new FormLayoutConstraints( null ) {
 			"location": new java.awt.Point( 0, 0 )
-			"size": new java.awt.Dimension( 470, 490 )
+			"size": new java.awt.Dimension( 470, 675 )
 		} )
 	}
 }

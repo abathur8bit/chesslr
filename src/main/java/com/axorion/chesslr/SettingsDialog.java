@@ -49,6 +49,7 @@ public class SettingsDialog extends JDialog {
         setLevel(prefs.getLevel());
         setSlowMover(prefs.getSlowMover());
         setMoveTime(prefs.getMoveTime());
+        fenTextField.setText(prefs.getFen());
 
         super.setVisible(true);
     }
@@ -59,6 +60,7 @@ public class SettingsDialog extends JDialog {
         prefs.setDisableEngine(disableEngineCheckBox.isSelected());
         prefs.setLevel(getLevel());
         prefs.setSlowMover(getSlowMover());
+        prefs.setFen(fenTextField.getText());
 
         setVisible(false);
     }
@@ -228,6 +230,10 @@ public class SettingsDialog extends JDialog {
         levelTextField = new JTextField();
         label2 = new JLabel();
         slowMoverTextField = new JTextField();
+        label3 = new JLabel();
+        moveTimeTextField = new JTextField();
+        label4 = new JLabel();
+        fenTextField = new JTextField();
         testPanel = new JPanel();
         xanimButton = new JButton();
         sweapAnimButton = new JButton();
@@ -322,12 +328,29 @@ public class SettingsDialog extends JDialog {
                     //---- slowMoverTextField ----
                     slowMoverTextField.setPreferredSize(new Dimension(75, 30));
                     enginePanel.add(slowMoverTextField);
+
+                    //---- label3 ----
+                    label3.setText("Move Time (ms 0=disable)");
+                    enginePanel.add(label3);
+
+                    //---- moveTimeTextField ----
+                    moveTimeTextField.setPreferredSize(new Dimension(75, 30));
+                    enginePanel.add(moveTimeTextField);
+
+                    //---- label4 ----
+                    label4.setText("FEN");
+                    enginePanel.add(label4);
+
+                    //---- fenTextField ----
+                    fenTextField.setPreferredSize(new Dimension(375, 30));
+                    fenTextField.setFont(fenTextField.getFont().deriveFont(fenTextField.getFont().getSize() - 2f));
+                    enginePanel.add(fenTextField);
                 }
                 contentPanel.add(enginePanel);
 
                 //======== testPanel ========
                 {
-                    testPanel.setBorder(new TitledBorder("Test"));
+                    testPanel.setBorder(new TitledBorder("Hardware Tests"));
                     testPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
                     //---- xanimButton ----
@@ -389,6 +412,10 @@ public class SettingsDialog extends JDialog {
     private JTextField levelTextField;
     private JLabel label2;
     private JTextField slowMoverTextField;
+    private JLabel label3;
+    private JTextField moveTimeTextField;
+    private JLabel label4;
+    private JTextField fenTextField;
     private JPanel testPanel;
     private JButton xanimButton;
     private JButton sweapAnimButton;

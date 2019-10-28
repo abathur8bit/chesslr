@@ -1011,7 +1011,9 @@ public class AppFrame extends JFrame implements InvocationHandler,PieceListener 
     }
 
     private void settingsButtonActionPerformed() {
+        getPrefs().setFen(chessBoard.toFen());
         settingsDialog.open(getPrefs());
+        chessBoard.setFenPosition(getPrefs().getFen());
         enableButtons();
         updateMovesText();
         repaint();
