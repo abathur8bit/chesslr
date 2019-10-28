@@ -497,9 +497,11 @@ public class ChessBoard
         if(currentMove == Side.WHITE) {
             if(m.isCastleKingSide()) {
                 castleWhiteKingSide = false;
+                castleWhiteQueenSide = false;
                 gameBoard[63] = EMPTY_SQUARE;
                 gameBoard[61] = 'R';
             } else if(m.isCastleQueenSide()) {
+                castleWhiteKingSide = false;
                 castleWhiteQueenSide = false;
                 gameBoard[56] = EMPTY_SQUARE;
                 gameBoard[59] = 'R';
@@ -507,9 +509,11 @@ public class ChessBoard
         } else {
             if(m.isCastleKingSide()) {
                 castleBlackKingSide = false;
+                castleBlackQueenSide = false;
                 gameBoard[7] = EMPTY_SQUARE;
                 gameBoard[5] = 'r';
             } else if(m.isCastleQueenSide()) {
+                castleBlackKingSide = false;
                 castleBlackQueenSide = false;
                 gameBoard[0] = EMPTY_SQUARE;
                 gameBoard[3] = 'r';
