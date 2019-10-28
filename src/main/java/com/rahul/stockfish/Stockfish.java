@@ -153,9 +153,11 @@ public class Stockfish {
         sendCommand("setoption name Slow Mover value "+slowMover);
         sendCommand("position fen " + fen);
         if(moveTime == 0)
-            sendCommand("go depth 1");
+            sendCommand("go");
+//            sendCommand("go depth 1");
         else
-            sendCommand("go movetime " + moveTime+" depth 1");
+            sendCommand("go movetime " + moveTime);
+//            sendCommand("go movetime " + moveTime+" depth 1");
         String output = getOutput(waitTime+20);
         System.out.println("Got result\n"+output);
         return output.split("bestmove ")[1].split(" ")[0].substring(0,4);
