@@ -182,74 +182,82 @@ public class ChessBoard
      */
     public void setFenPosition(String fen) {
         resetBoard(Side.WHITE);
+        String[] sections = fen.split(" ");
+//        System.out.println(sections);
+        parsePieces(sections[0]);
+        parseColor(sections[1]);
+        parseCastling(sections[2]);
+        parseEnpassant(sections[3]);
+        parseHalfMoves(sections[4]);
+        parseFullMoves(sections[5]);
+    }
+
+    private void parsePieces(String fen) {
+        int boardIndex = 0;
+        for(char ch : fen.toCharArray()) {
+//            char ch = fen.charAt(fenPos);
+            if(Character.isDigit(ch)) {
+                int count = ch-'0';
+                putSpaces(count,boardIndex);
+                boardIndex += count;
+            } else if(ch == '/') {
+                continue;
+            } else {
+                gameBoard[boardIndex++] = ch;
+            }
+        }
+    }
+
+    private void parseColor(String fen) {
+        char ch = fen.charAt(0);
+        if(ch == WHITE) {
+            currentMove = Side.WHITE;
+        } else if(ch == BLACK) {
+            currentMove = Side.BLACK;
+        } else {
+            throw new InvalidParameterException(String.format("Color [%c] is not valid",ch));
+        }
+    }
+
+    private void parseCastling(String fen) {
         castleWhiteKingSide = false;
         castleWhiteQueenSide = false;
         castleBlackKingSide = false;
         castleBlackQueenSide = false;
 
         int fenPos = 0;
-        int boardIndex = 0;
-        int parsingSection = 0;
         while(fenPos < fen.length()) {
             char ch = fen.charAt(fenPos);
-            if(ch == ' ') {
-                parsingSection++;   //parsing the next part of fen
-                fenPos++;
-                continue;   //skip spaces
+            // Castling availability. If neither side can castle, this is "-". Otherwise, this has one or
+            // more letters: "K" (White can castle kingside), "Q" (White can castle queenside),
+            // "k" (Black can castle kingside), and/or "q" (Black can castle queenside).
+            if(ch == 'K') {
+                castleWhiteKingSide = true;
+            } else if(ch == 'Q') {
+                castleWhiteQueenSide = true;
+            } else if(ch == 'k') {
+                castleBlackKingSide = true;
+            } else if(ch == 'q') {
+                castleBlackQueenSide = true;
             }
-            switch(parsingSection) {
-                case 0:
-                    if(Character.isDigit(ch)) {
-                        int count = ch-'0';
-                        putSpaces(count,boardIndex);
-                        boardIndex += count;
-                    } else if(ch == '/') {
-                        break;   //ignore, and keep going
-//                    } else if(ch == ' ') {
-//                        parsingSection++;   //parsing the next part of fen
-//                        continue;      //end of parsing of known stuff
-                    } else {
-                        gameBoard[boardIndex++] = ch;
-                    }
-                    break;
-
-                case 1:
-                    if(ch == WHITE) {
-                        currentMove = Side.WHITE;
-                    } else if(ch == BLACK) {
-                        currentMove = Side.BLACK;
-                    } else {
-                        throw new InvalidParameterException(String.format("Color [%c] is not valid",ch));
-                    }
-                    break;
-
-                case 2:
-                    // Castling availability. If neither side can castle, this is "-". Otherwise, this has one or
-                    // more letters: "K" (White can castle kingside), "Q" (White can castle queenside),
-                    // "k" (Black can castle kingside), and/or "q" (Black can castle queenside).
-                    if(ch == '-') {
-                        castleWhiteKingSide = false;
-                        castleWhiteQueenSide = false;
-                        castleBlackKingSide = false;
-                        castleBlackQueenSide = false;
-                    } else if(ch == 'K') {
-                        castleWhiteKingSide = true;
-                    } else if(ch == 'Q') {
-                        castleWhiteQueenSide = true;
-                    } else if(ch == 'k') {
-                        castleBlackKingSide = true;
-                    } else if(ch == 'q') {
-                        castleBlackQueenSide = true;
-//                    } else if(ch == ' ') {
-//                        parsingSection++;
-                    }
-                    break;
 
                 default:
                     break;
             }
             fenPos++;
         }
+    }
+
+    private void parseEnpassant(String fen) {
+
+    }
+
+    private void parseHalfMoves(String fen) {
+        halfMoveCounter = Integer.parseInt(fen);
+    }
+
+    private void parseFullMoves(String fen) {
+        fullMoveCounter = Integer.parseInt(fen)-1;
     }
 
     private void putSpaces(int numSpaces,int boardIndex) {
@@ -390,7 +398,7 @@ public class ChessBoard
             } else {
                 String from = move.getFrom();
                 String to = move.getTo();
-                char pieceFrom = (char)board.pieceAt(from);
+                char pieceFrom = move.getMovedPiece();
                 char pieceTo = (char)board.pieceAt(to);
                 if(pieceFrom >= 'a') {
                     pieceFrom = (char)(pieceFrom-'a'+'A');
@@ -403,6 +411,8 @@ public class ChessBoard
                     temp.append(to);
                 } else {
                     temp.append(pieceFrom);
+                    if(pieceFrom == 'n' || pieceFrom == 'N' || pieceFrom == 'r' || pieceFrom == 'R')
+                        temp.append(from.charAt(0));
                     if(take) {
                         temp.append('x');
                     }
@@ -592,6 +602,9 @@ public class ChessBoard
                 }
                 fen.append((char)gameBoard[i]);
             }
+        }
+        if(emptyCount>0) {
+            fen.append(emptyCount);
         }
 
         //what side plays

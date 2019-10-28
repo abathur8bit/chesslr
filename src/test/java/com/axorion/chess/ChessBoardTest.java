@@ -296,4 +296,43 @@ public class ChessBoardTest extends TestCase
         assertFalse(board.canBlackCastleKingSide());
         assertTrue(board.canBlackCastleQueenSide());
     }
+
+    public void testKnightGetsSquareFrom() {
+        ChessBoard board = new ChessBoard();
+        String fen = "r1b1k1nr/ppqnbppp/4p3/3p4/2PP4/1P4P1/PB1N1P1P/R2QKBNR b KQkq - 2 8";
+        board.setFenPosition(fen);
+        board.move("g8f6");
+        assertEquals("1.Ngf6",board.getMovesPgn());
+        System.out.println(board.getMovesPgn());
+    }
+    //r3r1k1/p3bp1p/bp1q1n2/3p2p1/3P4/1P2R1PB/PB1N1P1P/2RQ2K1 w - - 2 19
+    public void testRookGetsSquareFrom() {
+        ChessBoard board = new ChessBoard();
+        String fen = "r3r1k1/p3bp1p/bp1q1n2/3p2p1/3P4/1P2R1PB/PB1N1P1P/2RQ2K1 w - - 2 19";
+        board.setFenPosition(fen);
+        board.move("e3c3");
+        assertEquals("1.Rec3",board.getMovesPgn());
+        System.out.println(board.getMovesPgn());
+    }
+
+    //had a problem with the last square being empty
+    public void testLastSquareEmpty() {
+        String fen = "2bqkb1Q/p4p2/1r1np2p/8/1P6/P1pR1B2/2P2PPP/R5K1 b Qkq - 5 41";
+        ChessBoard board = new ChessBoard();
+        board.setFenPosition(fen);
+        assertEquals(fen,board.toFen());
+    }
+
+    public void testSetFenPos() {
+        String fen = "2bqkb1Q/p4p2/1r1np2p/8/1P6/P1pR1B2/2P2PPP/R5K1 b Qkq - 5 41";
+        ChessBoard board = new ChessBoard();
+        board.setFenPosition(fen);
+        assertEquals(ChessBoard.Side.BLACK,board.getCurrentMove());
+        assertEquals(true,board.castleBlackKingSide);
+        assertEquals(true,board.castleBlackQueenSide);
+        assertEquals(false,board.castleWhiteKingSide);
+        assertEquals(true,board.castleWhiteQueenSide);
+        assertEquals(5,board.halfMoveCounter);
+        assertEquals(41,board.fullMoveCounter+1);
+    }
 }
